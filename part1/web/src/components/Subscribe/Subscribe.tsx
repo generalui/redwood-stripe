@@ -6,25 +6,16 @@ import { useState } from 'react'
 const Subscribe = ({ clientSecret }: { clientSecret: string }) => {
   const { currentUser } = useAuth()
   const [message, setMessage] = useState('')
-  // Initialize an instance of stripe.
   const stripe = useStripe()
   const elements = useElements()
 
   if (!stripe || !elements || !currentUser) {
-    // Stripe.js has not loaded yet. Make sure to disable
-    // form submission until Stripe.js has loaded.
     return null
   }
 
   const handleSubmit = async (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault()
-
-    // Get a reference to a mounted CardElement. Elements knows how
-    // to find your CardElement because there can only ever be one of
-    // each type of element.
     const cardElement = elements.getElement(CardElement)
-
-    // Use card Element to tokenize payment details
     const { error, paymentIntent } = await stripe.confirmCardPayment(
       clientSecret,
       {
@@ -36,9 +27,7 @@ const Subscribe = ({ clientSecret }: { clientSecret: string }) => {
         },
       }
     )
-
     if (error) {
-      // show error and collect new card details.
       setMessage(error.message)
       return
     }

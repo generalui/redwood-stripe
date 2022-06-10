@@ -22,7 +22,11 @@ export const handler = async (event: APIGatewayEvent) => {
       const { clientSecret } = await createSubscription(customer.id, priceId)
       await db.user.update({
         where: { id: user.id },
-        data: { stripeClientSecret: clientSecret, subscriptionStatus: 'init' },
+        data: {
+          stripeClientSecret: clientSecret,
+          subscriptionStatus: 'init',
+          subscriptionName: product.name,
+        },
       })
       return {
         statusCode: 200,
