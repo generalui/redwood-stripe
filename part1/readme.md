@@ -3,9 +3,12 @@
 ## nvm and node
 
 At the time of writting, redwood requires node version < 17. So if you don't have it already, install the latest node v16 version on your machine (I recommend using [nvm](https://github.com/nvm-sh/nvm) to manage your node versions)
-`nvm install v16.15.1`
-`nvm alias default v16.15.1`
-`nvm use v16.15.1`
+
+```
+nvm install v16.15.1
+nvm alias default v16.15.1
+nvm use v16.15.1
+```
 
 ## yarn
 
@@ -15,6 +18,7 @@ At the time of writting, redwood requires node version < 17. So if you don't hav
 
 `brew install postgres` on mac os, otherwise you can look up (postgres download page)[https://www.postgresql.org/download/]
 Another option is to use (docker)[https://docs.docker.com/get-started/] (that's what I am using), here is the docker compose file you can use:
+
 ```
 version: '3.1'
 
@@ -52,6 +56,7 @@ Create front-end authentication
 `yarn rw generate dbAuth`
 
 Update you prisma schema to include a user model that support the authentication we just installed. Remove the `UserExample` model from `prisma.schema` and add:
+
 ```
 enum SubscriptionStatus {
   init
@@ -72,16 +77,19 @@ model User {
   subscriptionStatus  SubscriptionStatus?
 }
 ```
+
 A few fields we're adding here:
-- __stripeClientSecret__: When we will initiate a payment intent this value is going to be needed in the front end to authenticate the transaction. But we also save it in the backend until stripe calls the stripe webhook endpoint with a `payment_intent.succeeded` event (or a `payment_intent.payment_failed`) in which case we can update the `subscriptionStatus` accordingly and delete the `stripeClientSecret` because it should not be reused
-- __subscriptionName__: Keeps track of which kind of subscription the user has
-- __roles__: We're not adding this one, but we're using it. It will contain the value `seller` to mark users that have a subscription and can sell stuff on our platform
-- __subscriptionStatus__: Keeps track of whether the user paid his subscription or not
+
+- **stripeClientSecret**: When we will initiate a payment intent this value is going to be needed in the front end to authenticate the transaction. But we also save it in the backend until stripe calls the stripe webhook endpoint with a `payment_intent.succeeded` event (or a `payment_intent.payment_failed`) in which case we can update the `subscriptionStatus` accordingly and delete the `stripeClientSecret` because it should not be reused
+- **subscriptionName**: Keeps track of which kind of subscription the user has
+- **roles**: We're not adding this one, but we're using it. It will contain the value `seller` to mark users that have a subscription and can sell stuff on our platform
+- **subscriptionStatus**: Keeps track of whether the user paid his subscription or not
 
 Generate a session secret
 `yarn rw generate secret`
 
 Setup db connection in .env:
+
 ```
 DATABASE_URL=postgresql://postgres:example@localhost/redwoodstripe
 SESSION_SECRET=<ouput from yarn rw generate secret>
@@ -108,13 +116,16 @@ Let's make it the home page by updating the path
 Typically a market place has 2 different kind of users. Reguular users (buyers / customers) and sellers. We could also have admins, but that's outside the scope of this tutorial. We will use the roles attribute on the user model to store this information.
 
 Update `SignupPage.tsx` with the following, right after `<FieldError name="password" className="rw-field-error" />`:
+
 ```
 <Label name="seller" className="rw-label">
   Seller
 </Label>
 <CheckboxField name="seller" className="rw-input" />
 ```
+
 And while we're in this file, let's make another update because we want to signup with emails, not username, so modify the username input to be:
+
 ```
 <Label
   name="username"
@@ -138,6 +149,7 @@ And while we're in this file, let's make another update because we want to signu
 ```
 
 Finally in `api/src/functions/auth.ts`, look for signupOptions' handler and add userAttributes to capture the seller boolean from the form's checkbox that we just added:
+
 ```
 handler: ({ username, hashedPassword, salt, userAttributes }) => {
   return db.user.create({
@@ -173,6 +185,7 @@ export const stripe = new Stripe(process.env.STRIPE_SK, {
 ```
 
 You now need to add a few variables to your .env file:
+
 ```
 STRIPE_PK=pk_test_...
 STRIPE_SK=sk_test_...
@@ -182,14 +195,15 @@ STRIPE_WEBHOOK_SK=whsec_...
 The first 2 are coming directly from your [stripe dashboard](https://dashboard.stripe.com/test/dashboard)
 The last one requires you to install the stripe deamon on your machine, you can find it [here](https://stripe.com/docs/stripe-cli)
 Once installed, run the command
+
 ```
 stripe listen --api-key=sk_test_... --print-secret
 ```
 
-
 ## Add some subscription products
 
 We now want our marketplace to have the choice between 2 subscriptions:
+
 - The Basic subscription. It won't cost much every month but then we'll take so much commission off the sales that this will probably not be sustainable so your sellers will want to upgrade to..
 - The Pro subscription. A tad more pricey but then we just take 3% commission on each sale! A steal
 
@@ -199,12 +213,13 @@ As we've already seen, Redwood has a great [CLI tool](https://redwoodjs.com/docs
 export default async () => {}
 ```
 
-
 We'll start using the stripe API. We'll use the 2 following commands:
+
 - [list](https://stripe.com/docs/api/products/list?lang=node) To check that we did not already create the subscriptions
 - [create](https://stripe.com/docs/api/products/create?lang=node) To create each subscription
 
 We first define our subscriptions as a list of Stripe.ProductCreateParams
+
 ```
 const subscriptions: Stripe.ProductCreateParams[] = [
   {
@@ -231,7 +246,6 @@ const subscriptions: Stripe.ProductCreateParams[] = [
   },
 ]
 ```
-
 
 We can then retrieve the products and check that they don't already exist on your Stripe account inside the function we just created:
 
@@ -267,6 +281,7 @@ And finally create the subcriptions
 
 And let the magic happen 🪄 `yarn rw exec seed-stripe-subscriptions --no-prisma`
 You should get:
+
 ```
 [XX:XX:XX] Running script [started]
 Getting products
@@ -281,6 +296,7 @@ Done
 
 We need a new graphQL query to retrieve all available subscriptions from our Stripe account
 To do this create `api/src/graphql/subscriptions.sdl.ts` and define your query like this:
+
 ```
 export const schema = gql`
   scalar URL
@@ -324,6 +340,7 @@ export const subscriptions = async () => {
 
 Let's now try our new graphql endpoint!
 I usually use Postman to do that, but it's easier to print cURL commands, so here is our new graphql query:
+
 ```
 curl --location --request POST 'http://localhost:8910/.redwood/functions/graphql' \
 --header 'Content-Type: application/json' \
@@ -334,6 +351,7 @@ And... it fails!
 
 When we look at the server output we see `Cannot return null for non-nullable field Subscription.price.`
 Hmm, seems like that `default_price` is not what it supposed to be. And indeed, if we add a `console.log(products)` statement before our `return` statement and run that cURL command again, the server output is going to give a bit more insights into what's going on:
+
 ```
 api | [
 api |   {
@@ -383,16 +401,19 @@ api | ]
 
 The default_price returns a price id. Not super useful. But the stripe API sort of work like graphql and all you need to do is to add an `expand` param to the API call and it can populate that default_price for you
 So let's change the list API call to
+
 ```
   const { data: products } = await stripe.products.list({
     active: true,
     expand: ['data.default_price'],
   })
 ```
+
 It seems odd to me to have to put `data.` but if you don't put it, it gives you a nice error message that tells you to put it.
 
 We finally get the result that we want:
-```
+
+````
 {
     "data": {
         "subscriptions": [
@@ -424,14 +445,16 @@ Let's start by creating the page. But this page will first need to load the subs
 We'll also need a page to host this cell
 `yarn rw generate page PickSubscription`
 And in `PickSubscription.ts` call the cell
-```
+````
+
 import SubscriptionsCell from 'src/components/SubscriptionsCell'
 
 const PickSubscriptionPage = () => {
-  return <SubscriptionsCell />
+return <SubscriptionsCell />
 }
 
 export default PickSubscriptionPage
+
 ```
 
 Note the magic, we call `src/components/SubscriptionsCell` instead of `src/components/SubscriptionsCell/SubscriptionsCell` as we do for regular components
@@ -440,42 +463,35 @@ We need to update the Cell in order to get what we want and initiate the checkou
 
 1- The query does not return enough information, we also need name, price, currency, description
 ```
-export const QUERY = gql`
-  query SubscriptionsQuery {
-    subscriptions {
-      id
-      name
-      price
-      priceId
-      currency
-      description
-    }
-  }
-`
+
+export const QUERY = gql` query SubscriptionsQuery { subscriptions { id name price priceId currency description } }`
+
 ```
 
 2- Although we don't want to do any styling, displaying object with JSON.stringify is still a little below us. So let's format the subscriptions in the success handler
 ```
+
 export const Success = ({
-  subscriptions,
+subscriptions,
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
-  const pickSubscription = (subscription: Subscription) => {}
-  return (
-    <>
-      <h1>Pick a subscription</h1>
-      <ul>
-        {subscriptions.map((item) => {
-          return (
-            <li key={item.id}>
-              {item.name} - {item.description} - <b>${item.price / 100}/mo</b>
-              <button onClick={() => pickSubscription(item)}>Pick</button>
-            </li>
-          )
-        })}
-      </ul>
-    </>
-  )
+const pickSubscription = (subscription: Subscription) => {}
+return (
+<>
+<h1>Pick a subscription</h1>
+<ul>
+{subscriptions.map((item) => {
+return (
+<li key={item.id}>
+{item.name} - {item.description} - <b>${item.price / 100}/mo</b>
+<button onClick={() => pickSubscription(item)}>Pick</button>
+</li>
+)
+})}
+</ul>
+</>
+)
 }
+
 ```
 
 ## Redirect sellers without subscription to the pick subscription page
@@ -488,21 +504,23 @@ We want to compel sellers to pay for a subscription. For this we will add a layo
 
 Let's get our db ready to record all payment activities from ours users and create a `PaymentActivity` model in `schema.prisma`:
 ```
+
 enum PaymentStatus {
-  init
-  success
-  failed
+init
+success
+failed
 }
 
 model PaymentActivity {
-  id               Int           @id @default(autoincrement())
-  createdAt        DateTime      @default(now())
-  status           PaymentStatus
-  user             User          @relation(fields: [userId], references: [id])
-  userId           Int
-  subscriptionName String
-  priceId          String
+id Int @id @default(autoincrement())
+createdAt DateTime @default(now())
+status PaymentStatus
+user User @relation(fields: [userId], references: [id])
+userId Int
+subscriptionName String
+priceId String
 }
+
 ```
 And run `yarn rw prisma migrate dev` to create and apply the new migration which you could name `create payment activity table`
 
@@ -517,113 +535,119 @@ We're not really using Express as in the example, but a Redwood serverless funct
 Translating the example of the quick start into aws lambda lingo gives this first naive version of our function:
 
 ```
+
 import type { APIGatewayEvent } from 'aws-lambda'
 import { logger } from 'src/lib/logger'
 import { stripe } from 'src/lib/stripe'
 
 export const handler = async (event: APIGatewayEvent) => {
-  logger.info('Invoked createSubscription function')
-  if (event.httpMethod !== 'GET') {
-    throw new Error('Only get method for this function please')
-  }
-  const queryParams = event.queryStringParameters
-  if (queryParams.priceId) {
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price: queryParams.priceId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: `${process.env.BASE_URL}/subscription-callback?success=true`,
-      cancel_url: `${process.env.BASE_URL}/subscription-callback?canceled=true`,
-      // automatic_tax: { enabled: true },
-    })
-    return {
-      statusCode: 303,
-      headers: {
-        Location: session.url,
-      },
-    }
-  }
-  return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      data: 'nothing happened...',
-    }),
-  }
+logger.info('Invoked createSubscription function')
+if (event.httpMethod !== 'GET') {
+throw new Error('Only get method for this function please')
 }
+const queryParams = event.queryStringParameters
+if (queryParams.priceId) {
+const session = await stripe.checkout.sessions.create({
+line_items: [
+{
+price: queryParams.priceId,
+quantity: 1,
+},
+],
+mode: 'subscription',
+success_url: `${process.env.BASE_URL}/subscription-callback?success=true`,
+cancel_url: `${process.env.BASE_URL}/subscription-callback?canceled=true`,
+// automatic_tax: { enabled: true },
+})
+return {
+statusCode: 303,
+headers: {
+Location: session.url,
+},
+}
+}
+return {
+statusCode: 200,
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify({
+data: 'nothing happened...',
+}),
+}
+}
+
 ```
 
 If we leave it like this, there will be no way for us to track payment activity, and that's something we would like to keep track of, so let's add the code to create an initial payment activity row:
 
 ```
+
 import type { APIGatewayEvent } from 'aws-lambda'
 import { db } from 'src/lib/db'
 import { logger } from 'src/lib/logger'
 import { stripe } from 'src/lib/stripe'
 
 export const handler = async (event: APIGatewayEvent) => {
-  logger.info('Invoked createSubscription function')
-  if (event.httpMethod !== 'GET') {
-    throw new Error('Only get method for this function please')
-  }
-  const queryParams = event.queryStringParameters
-  if (
-    queryParams.userId &&
-    queryParams.subscriptionName &&
-    queryParams.priceId
-  ) {
-    const paymentActivity = await db.paymentActivity.create({
-      data: {
-        userId: +queryParams.priceId,
-        subscriptionName: queryParams.subscriptionName,
-        priceId: queryParams.priceId,
-        status: 'init',
-      },
-    })
-    if (!paymentActivity) {
-      throw new Error('Could not create payment activity')
-    }
-    const session = await stripe.checkout.sessions.create({
-      line_items: [
-        {
-          price: queryParams.userId,
-          quantity: 1,
-        },
-      ],
-      mode: 'subscription',
-      success_url: `${process.env.BASE_URL}/subscription-callback?success=true`,
-      cancel_url: `${process.env.BASE_URL}/subscription-callback?canceled=true`,
-      // automatic_tax: { enabled: true },
-    })
-    return {
-      statusCode: 303,
-      headers: {
-        Location: session.url,
-      },
-    }
-  }
-  return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      data: 'nothing happened...',
-    }),
-  }
+logger.info('Invoked createSubscription function')
+if (event.httpMethod !== 'GET') {
+throw new Error('Only get method for this function please')
 }
+const queryParams = event.queryStringParameters
+if (
+queryParams.userId &&
+queryParams.subscriptionName &&
+queryParams.priceId
+) {
+const paymentActivity = await db.paymentActivity.create({
+data: {
+userId: +queryParams.priceId,
+subscriptionName: queryParams.subscriptionName,
+priceId: queryParams.priceId,
+status: 'init',
+},
+})
+if (!paymentActivity) {
+throw new Error('Could not create payment activity')
+}
+const session = await stripe.checkout.sessions.create({
+line_items: [
+{
+price: queryParams.userId,
+quantity: 1,
+},
+],
+mode: 'subscription',
+success_url: `${process.env.BASE_URL}/subscription-callback?success=true`,
+cancel_url: `${process.env.BASE_URL}/subscription-callback?canceled=true`,
+// automatic_tax: { enabled: true },
+})
+return {
+statusCode: 303,
+headers: {
+Location: session.url,
+},
+}
+}
+return {
+statusCode: 200,
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify({
+data: 'nothing happened...',
+}),
+}
+}
+
 ```
 
 At this point it would be nice to test if this function is doing what it supposed to and we get redirected. Get a userId form your db (if there isn't any go to http://localhost:8910/signup and create a user), get a priceId (see the list subscriptions section) and try
 
 ```
+
 curl --location --request GET 'http://localhost:8910/.redwood/functions/createSubscription?priceId=price_1L8BTLCoThLt2WWY4gs2sBdk&subscriptionName=Basic&userId=1' --header 'Content-Type: application/json'
+
 ```
 
 You should get an html file in return and your payment activity table should have a new row
@@ -634,10 +658,12 @@ We're almost ready to try our subscription registration. We need 2 last things, 
 
 Let's start by updating our pickSubscription function:
 ```
-  const { currentUser } = useAuth()
-  const pickSubscription = (subscription: Subscription) => {
-    location.href = `/.redwood/functions/createSubscription?userId=${currentUser.id}&priceId=${subscription.priceId}&subscriptionName=${subscription.name}`
-  }
+
+const { currentUser } = useAuth()
+const pickSubscription = (subscription: Subscription) => {
+location.href = `/.redwood/functions/createSubscription?userId=${currentUser.id}&priceId=${subscription.priceId}&subscriptionName=${subscription.name}`
+}
+
 ```
 And try!
 Go to http://localhost:8910/pick-subscription and pick a subscription, fill out the stripe checkout form (use 4242 4242 4242 4242 as CC number, rest doesn't matter as long as it is valid) and you should get redirected to your ngrok success url. But it fails... With something like 'Invalid Host Header".... Bummer. Interneting, interneting. It turns out that our dev server doesn't accept random host. The good news is [here](https://deploy-preview-605--redwoodjs.netlify.app/docs/webpack-configuration#webpack-dev-server) you can start your dev server with any webpack option and as it turns out, there is an [option](https://webpack.js.org/configuration/dev-server/#devserverallowedhosts) to allow any host. So, you can stop your dev server and restart it with this modified command: `yarn rw dev --forward="--allowed-hosts=all"` make that test again and you should get to the page with the path `/subscription-callback?success=true` as you defined it earlier in the serverless function.
@@ -647,27 +673,31 @@ Go to http://localhost:8910/pick-subscription and pick a subscription, fill out 
 
 LEt's create a serverless function that will handle events coming from stripe directly
 ```
+
 yarn rw generate function stripeWebhook
+
 ```
 
 For the moment let's just log the event, so replace the content of api/src/functions/stripeWebhook/stripeWebhook.ts with:
 ```
+
 import type { APIGatewayEvent } from 'aws-lambda'
 import { logger } from 'src/lib/logger'
 
 export const handler = async (event: APIGatewayEvent) => {
-  logger.info('Invoked stripeWebhook function')
-  console.log(event.body)
-  return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      data: { received: true },
-    }),
-  }
+logger.info('Invoked stripeWebhook function')
+console.log(event.body)
+return {
+statusCode: 200,
+headers: {
+'Content-Type': 'application/json',
+},
+body: JSON.stringify({
+data: { received: true },
+}),
 }
+}
+
 ```
 
 According to the Stripe docs, you need to install Stripe cli in order to capture webhook on your local machine. On a Mac you can do `brew install stripe/stripe-cli/stripe`, for other platforms, [Stripe got your back](https://stripe.com/docs/payments/handling-payment-events)
@@ -681,10 +711,13 @@ This should output an event object in JSON format on your terminal window where 
 
 I was curious to see all the webhook that are triggered during the checkout process, but since those events are pretty verbose, I output just the type
 ```
+
 console.log(JSON.parse(event.body).type)
+
 ```
 And then go back to http://localhost:8910/pick-subscription and go through the process again, here is the list of event that stripe is sending to my webhook
 ```
+
 charge.succeeded
 checkout.session.completed
 payment_method.attached
@@ -699,12 +732,14 @@ invoice.paid
 invoice.payment_succeeded
 payment_intent.succeeded
 payment_intent.created
+
 ```
 According to the docs, it seems that `payment_intent.succeeded` is the event that signals successful payment
 
 I then tried tried with one of the test CC with unsufficient funds `4000000000009995`, stripe has a [list of them](https://stripe.com/docs/testing)
 And the list of events becomes
 ```
+
 customer.created
 charge.failed
 customer.updated
@@ -716,6 +751,7 @@ invoice.payment_failed
 invoice.updated
 payment_intent.created
 payment_intent.payment_failed
+
 ```
 We will take `payment_intent.payment_failed` as an indicator of failed payment
 
@@ -731,3 +767,4 @@ We can now update our wstripeWebhook function accordingly
 Congrats! You're probably now sipping a margharita in the middle of your infinity pool on your new island in the Pacific, big enough to welcome a successful edition of the [Fyre festival](https://en.wikipedia.org/wiki/Fyre_Festival), and you're wondering, "what kind of products did we even sell?"
 
 I hope you enjoyed the tutorial. Or if you skipped to the end to check out where the repo with all the code [here it is](https://github.com)
+```

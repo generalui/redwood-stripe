@@ -8,30 +8,35 @@ Note: We'll be using Typescript for this tutorial, doesn't mean that you have to
 
 Ok, now that we know we're going to buy an Island in the Pacific very soon, we need to divide and conquer and figure out what are the different steps going to be:
 
-Part 1:
+[Part 1:](part1/readme.md)
+
 - Setup & Authentication
 - List Subscriptions
 - Subscribe
 
 Part 2:
+
 - View my subscription
 - Cancel or upgrade my subscription
 
 Part 3:
+
 - Add products
 - List products by category
 
 Part 4:
+
 - Buy products
 - View my products
 
 Part 5:
+
 - Check subscription validity
 - Subscriber payouts (with commission)
 
 Part 6:
+
 - (admin) Payment list
 - (admin) make payment
 - (admin) Subscription list
 - 🏝️
-
