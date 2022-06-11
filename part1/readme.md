@@ -753,7 +753,7 @@ You should get an html file in return and your payment activity table should hav
 
 We're almost ready to try our subscription registration. We need 3 last things...
 
-1. Call our new serverless function
+**1. Call our new serverless function**
 
 First things first, let's update our `createSubscription` function in our `SubscriptionCell.tsx`:
 
@@ -761,7 +761,7 @@ First things first, let's update our `createSubscription` function in our `Subsc
 export const Success = ({
   subscriptions,
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
-  const { currentUser } = useAuth()
+  const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
   const createSubscription = async (subscription: Subscription) => {
     const response = await fetch('/.redwood/functions/createSubscription', {
@@ -775,6 +775,7 @@ export const Success = ({
       }),
     })
     const { clientSecret } = await response.json()
+    await reauthenticate()
     setClientSecret(clientSecret)
   }
   return (
@@ -796,8 +797,9 @@ export const Success = ({
   )
 }
 ```
+Note the `await reauthenticate()` call. This is to make sure our local `currentUser` is up to date with the latest information concerning the subscription. If the user had a subscription before, the backend reset the subscription state to `init`.
 
-2. Display a form to enter payment information
+**2. Display a form to enter payment information**
 
 Note that we call a `Subscribe` component but we haven't created it yet. So let's add it
 
@@ -861,7 +863,7 @@ export default Subscribe
 
 This also redirects the user our `sellStuff` if payment is successful
 
-3. Handle subscription status change in the backend
+**3. Handle subscription status change in the backend**
 
 And try!
 Go to http://localhost:8910/pick-subscription and pick a subscription, fill out the stripe checkout form (use 4242 4242 4242 4242 as CC number, rest doesn't matter as long as it is valid) and you should get redirected to your ngrok success url. But it fails... With something like 'Invalid Host Header".... Bummer. Interneting, interneting. It turns out that our dev server doesn't accept random host. The good news is [here](https://deploy-preview-605--redwoodjs.netlify.app/docs/webpack-configuration#webpack-dev-server) you can start your dev server with any webpack option and as it turns out, there is an [option](https://webpack.js.org/configuration/dev-server/#devserverallowedhosts) to allow any host. So, you can stop your dev server and restart it with this modified command: `yarn rw dev --forward="--allowed-hosts=all"` make that test again and you should get to the page with the path `/subscription-callback?success=true` as you defined it earlier in the serverless function.
@@ -1009,8 +1011,8 @@ if (paymentIntent.status === 'succeeded') {
 }
 ```
 
-We reauthenticate and expect the User in the database to have the right `subscriptionStatus`.
-But we don't know when stripe is calling our webhook to update the `subscriptionStatus` in our database. In this case we could use Apollo subscriptions, but for the sake of simplicity, we well just poll our backend and check if our user has been updated. Stripe won't send the notification to our webhook long after the payment has been confirmed. What we need is to just say that our payment is done, and then reauthenticate every second until the `currentUser.subscriptionStatus` is updated.
+We reauthenticate and expect the user in the database to have the right `subscriptionStatus`.
+But we don't know when stripe is calling our webhook to update the `subscriptionStatus` in our database. In this case we could use Apollo subscriptions, but for the sake of simplicity, we will just poll our backend and check if our user has been updated. Stripe won't send the notification to our webhook long after the payment has been confirmed. What we need is to just say that our payment is done, and then reauthenticate every second until the `currentUser.subscriptionStatus` is updated.
 
 ```tsx
 const [paymentDone, setPaymentDone] = useState(false)

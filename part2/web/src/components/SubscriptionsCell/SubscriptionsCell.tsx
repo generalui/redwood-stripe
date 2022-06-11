@@ -27,7 +27,7 @@ export const Failure = ({ error }: CellFailureProps) => (
 export const Success = ({
   subscriptions,
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
-  const { currentUser } = useAuth()
+  const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
   const createSubscription = async (subscription: Subscription) => {
     const response = await fetch('/.redwood/functions/createSubscription', {
@@ -41,6 +41,7 @@ export const Success = ({
       }),
     })
     const { clientSecret } = await response.json()
+    await reauthenticate()
     setClientSecret(clientSecret)
   }
   return (

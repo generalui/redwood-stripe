@@ -10,6 +10,7 @@ const Subscribe = ({ clientSecret }: { clientSecret: string }) => {
   const stripe = useStripe()
   const elements = useElements()
   useEffect(() => {
+    console.log('--->', paymentDone, JSON.stringify(currentUser))
     if (!paymentDone) return
     if (currentUser.subscriptionStatus === 'success') {
       navigate(routes.home())

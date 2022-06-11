@@ -14,6 +14,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     currentUser?.roles.includes('seller')
 
   useEffect(() => {
+    console.log('--->2', JSON.stringify(currentUser))
     if (
       location.pathname !== routes.pickSubscription() &&
       currentUser?.subscriptionStatus !== 'success' &&
