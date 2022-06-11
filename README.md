@@ -20,23 +20,20 @@ Part 2:
 
 - View my subscription
 - Cancel or upgrade my subscription
-
-Part 3:
-
 - Add products
 - List products by category
 
-Part 4:
+Part 3:
 
 - Buy products
 - View my products
 
-Part 5:
+Part 4:
 
 - Check subscription validity
 - Subscriber payouts (with commission)
 
-Part 6:
+Part 5:
 
 - (admin) Payment list
 - (admin) make payment

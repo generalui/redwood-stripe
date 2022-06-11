@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react'
 
 const Subscribe = ({ clientSecret }: { clientSecret: string }) => {
   const { currentUser, reauthenticate } = useAuth()
+  const [paymentDone, setPaymentDone] = useState(false)
   const [message, setMessage] = useState('')
   const stripe = useStripe()
   const elements = useElements()
-  const [paymentDone, setPaymentDone] = useState(false)
   useEffect(() => {
     if (!paymentDone) return
     if (currentUser.subscriptionStatus === 'success') {

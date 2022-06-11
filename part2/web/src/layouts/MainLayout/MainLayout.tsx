@@ -45,9 +45,16 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             </>
           )}
           {isAuthorizedSeller && (
-            <li>
-              <Link to={routes.sellStuff()}>Sell stuff</Link>
-            </li>
+            <>
+              <li>
+                <Link to={routes.sellStuff()}>Sell stuff</Link>
+              </li>
+              <li>
+                <Link to={routes.manageSubscription()}>
+                  Manage my subscription
+                </Link>
+              </li>
+            </>
           )}
         </ul>
       </nav>

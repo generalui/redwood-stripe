@@ -518,6 +518,7 @@ And add this code in the body of the `MainLayout` component:
 
 ```tsx
 const MainLayout = ({ children }: MainLayoutProps) => {
+  const location = useLocation()
   const { isAuthenticated, currentUser, logOut } = useAuth()
   const isAuthorizedSeller =
     currentUser?.subscriptionStatus === 'success' &&
@@ -525,12 +526,13 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
   useEffect(() => {
     if (
+      location.pathname !== routes.pickSubscription() &&
       currentUser?.subscriptionStatus !== 'success' &&
       currentUser?.roles.includes('seller')
     ) {
       navigate(routes.pickSubscription())
     }
-  }, [currentUser])
+  }, [currentUser, location])
   return (
     <>
       <nav>
@@ -812,7 +814,7 @@ import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { useState } from 'react'
 
 const Subscribe = ({ clientSecret }: { clientSecret: string }) => {
-  const { currentUser } = useAuth()
+  const { currentUser, reauthenticate } = useAuth()
   const [message, setMessage] = useState('')
   const stripe = useStripe()
   const elements = useElements()
@@ -839,7 +841,10 @@ const Subscribe = ({ clientSecret }: { clientSecret: string }) => {
       setMessage(error.message)
       return
     }
-    if (paymentIntent.status === 'succeeded') navigate(routes.sellStuff())
+    if (paymentIntent.status === 'succeeded') {
+      await reauthenticate()
+      navigate(routes.sellStuff())
+    }
   }
 
   return (
@@ -990,6 +995,42 @@ export const handler = async (event: APIGatewayEvent) => {
       data: { received: true },
     }),
   }
+}
+```
+
+## One last problem
+
+There is actually a problem with our subscribe component, when we do that:
+
+```ts
+if (paymentIntent.status === 'succeeded') {
+  await reauthenticate()
+  navigate(routes.sellStuff())
+}
+```
+
+We reauthenticate and expect the User in the database to have the right `subscriptionStatus`.
+But we don't know when stripe is calling our webhook to update the `subscriptionStatus` in our database. In this case we could use Apollo subscriptions, but for the sake of simplicity, we well just poll our backend and check if our user has been updated. Stripe won't send the notification to our webhook long after the payment has been confirmed. What we need is to just say that our payment is done, and then reauthenticate every second until the `currentUser.subscriptionStatus` is updated.
+
+```tsx
+const [paymentDone, setPaymentDone] = useState(false)
+useEffect(() => {
+  if (!paymentDone) return
+  if (currentUser.subscriptionStatus === 'success') {
+    navigate(routes.home())
+  } else {
+    setTimeout(() => reauthenticate(), 1000)
+  }
+}, [currentUser, reauthenticate, paymentDone])
+```
+
+and at the end of the `handleSubmit` method:
+
+```ts
+if (paymentIntent.status === 'succeeded') {
+  setMessage('waiting for confirmation...')
+  setPaymentDone(true)
+  reauthenticate()
 }
 ```
 
