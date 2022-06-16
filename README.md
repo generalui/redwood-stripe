@@ -19,7 +19,7 @@ Ok, now that we know we're going to buy an Island in the Pacific very soon, we n
 Part 2:
 
 - View my subscription
-- Cancel or upgrade my subscription
+- Cancel or change my subscription
 - Add products
 - List products by category
 

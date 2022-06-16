@@ -19,10 +19,96 @@ export type Scalars = {
   URL: any;
 };
 
+export type CreateProductInput = {
+  description?: InputMaybe<Scalars['String']>;
+  imageUrl?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  userId: Scalars['Int'];
+};
+
+export type CreateUserInput = {
+  email: Scalars['String'];
+  hashedPassword: Scalars['String'];
+  resetToken?: InputMaybe<Scalars['String']>;
+  resetTokenExpiresAt?: InputMaybe<Scalars['DateTime']>;
+  roles: Array<InputMaybe<Scalars['String']>>;
+  salt: Scalars['String'];
+  stripeClientSecret?: InputMaybe<Scalars['String']>;
+  subscriptionId?: InputMaybe<Scalars['String']>;
+  subscriptionName?: InputMaybe<Scalars['String']>;
+  subscriptionStatus?: InputMaybe<SubscriptionStatus>;
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createProduct: Product;
+  createUser: User;
+  deleteProduct: Product;
+  deleteUser: User;
+  updateProduct: Product;
+  updateUser: User;
+};
+
+
+export type MutationcreateProductArgs = {
+  input: CreateProductInput;
+};
+
+
+export type MutationcreateUserArgs = {
+  input: CreateUserInput;
+};
+
+
+export type MutationdeleteProductArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type MutationdeleteUserArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type MutationupdateProductArgs = {
+  id: Scalars['Int'];
+  input: UpdateProductInput;
+};
+
+
+export type MutationupdateUserArgs = {
+  id: Scalars['Int'];
+  input: UpdateUserInput;
+};
+
+export type Product = {
+  __typename?: 'Product';
+  description?: Maybe<Scalars['String']>;
+  id: Scalars['Int'];
+  imageUrl?: Maybe<Scalars['String']>;
+  name: Scalars['String'];
+  user: User;
+  userId: Scalars['Int'];
+};
+
 export type Query = {
   __typename?: 'Query';
+  product?: Maybe<Product>;
+  products: Array<Product>;
   redwood?: Maybe<Redwood>;
   subscriptions: Array<Subscription>;
+  user?: Maybe<User>;
+  users: Array<User>;
+};
+
+
+export type QueryproductArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type QueryuserArgs = {
+  id: Scalars['Int'];
 };
 
 export type Redwood = {
@@ -39,6 +125,47 @@ export type Subscription = {
   id: Scalars['ID'];
   name: Scalars['String'];
   price: Scalars['Int'];
+};
+
+export type SubscriptionStatus =
+  | 'failed'
+  | 'init'
+  | 'success';
+
+export type UpdateProductInput = {
+  description?: InputMaybe<Scalars['String']>;
+  imageUrl?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  userId?: InputMaybe<Scalars['Int']>;
+};
+
+export type UpdateUserInput = {
+  email?: InputMaybe<Scalars['String']>;
+  hashedPassword?: InputMaybe<Scalars['String']>;
+  resetToken?: InputMaybe<Scalars['String']>;
+  resetTokenExpiresAt?: InputMaybe<Scalars['DateTime']>;
+  roles: Array<InputMaybe<Scalars['String']>>;
+  salt?: InputMaybe<Scalars['String']>;
+  stripeClientSecret?: InputMaybe<Scalars['String']>;
+  subscriptionId?: InputMaybe<Scalars['String']>;
+  subscriptionName?: InputMaybe<Scalars['String']>;
+  subscriptionStatus?: InputMaybe<SubscriptionStatus>;
+};
+
+export type User = {
+  __typename?: 'User';
+  email: Scalars['String'];
+  hashedPassword: Scalars['String'];
+  id: Scalars['Int'];
+  product: Array<Maybe<Product>>;
+  resetToken?: Maybe<Scalars['String']>;
+  resetTokenExpiresAt?: Maybe<Scalars['DateTime']>;
+  roles: Array<Maybe<Scalars['String']>>;
+  salt: Scalars['String'];
+  stripeClientSecret?: Maybe<Scalars['String']>;
+  subscriptionId?: Maybe<Scalars['String']>;
+  subscriptionName?: Maybe<Scalars['String']>;
+  subscriptionStatus?: Maybe<SubscriptionStatus>;
 };
 
 export type SubscriptionsQueryVariables = Exact<{ [key: string]: never; }>;

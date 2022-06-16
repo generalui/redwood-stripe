@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { User as PrismaUser } from '.prisma/client';
+import { User as PrismaUser, Product as PrismaProduct } from '.prisma/client';
 import { RedwoodGraphQLContext } from '@redwoodjs/graphql-server/dist/functions/types';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -10,6 +10,7 @@ export type ResolverFn<TResult, TParent, TContext, TArgs> = (
       args?: TArgs,
       obj?: { root: TParent; context: TContext; info: GraphQLResolveInfo }
     ) => Promise<Partial<TResult>> | Partial<TResult>;
+export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: string;
@@ -26,10 +27,96 @@ export type Scalars = {
   URL: any;
 };
 
+export type CreateProductInput = {
+  description?: InputMaybe<Scalars['String']>;
+  imageUrl?: InputMaybe<Scalars['String']>;
+  name: Scalars['String'];
+  userId: Scalars['Int'];
+};
+
+export type CreateUserInput = {
+  email: Scalars['String'];
+  hashedPassword: Scalars['String'];
+  resetToken?: InputMaybe<Scalars['String']>;
+  resetTokenExpiresAt?: InputMaybe<Scalars['DateTime']>;
+  roles: Array<InputMaybe<Scalars['String']>>;
+  salt: Scalars['String'];
+  stripeClientSecret?: InputMaybe<Scalars['String']>;
+  subscriptionId?: InputMaybe<Scalars['String']>;
+  subscriptionName?: InputMaybe<Scalars['String']>;
+  subscriptionStatus?: InputMaybe<SubscriptionStatus>;
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createProduct: Product;
+  createUser: User;
+  deleteProduct: Product;
+  deleteUser: User;
+  updateProduct: Product;
+  updateUser: User;
+};
+
+
+export type MutationcreateProductArgs = {
+  input: CreateProductInput;
+};
+
+
+export type MutationcreateUserArgs = {
+  input: CreateUserInput;
+};
+
+
+export type MutationdeleteProductArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type MutationdeleteUserArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type MutationupdateProductArgs = {
+  id: Scalars['Int'];
+  input: UpdateProductInput;
+};
+
+
+export type MutationupdateUserArgs = {
+  id: Scalars['Int'];
+  input: UpdateUserInput;
+};
+
+export type Product = {
+  __typename?: 'Product';
+  description?: Maybe<Scalars['String']>;
+  id: Scalars['Int'];
+  imageUrl?: Maybe<Scalars['String']>;
+  name: Scalars['String'];
+  user: User;
+  userId: Scalars['Int'];
+};
+
 export type Query = {
   __typename?: 'Query';
+  product?: Maybe<Product>;
+  products: Array<Product>;
   redwood?: Maybe<Redwood>;
   subscriptions: Array<Subscription>;
+  user?: Maybe<User>;
+  users: Array<User>;
+};
+
+
+export type QueryproductArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type QueryuserArgs = {
+  id: Scalars['Int'];
 };
 
 export type Redwood = {
@@ -46,6 +133,47 @@ export type Subscription = {
   id: Scalars['ID'];
   name: Scalars['String'];
   price: Scalars['Int'];
+};
+
+export type SubscriptionStatus =
+  | 'failed'
+  | 'init'
+  | 'success';
+
+export type UpdateProductInput = {
+  description?: InputMaybe<Scalars['String']>;
+  imageUrl?: InputMaybe<Scalars['String']>;
+  name?: InputMaybe<Scalars['String']>;
+  userId?: InputMaybe<Scalars['Int']>;
+};
+
+export type UpdateUserInput = {
+  email?: InputMaybe<Scalars['String']>;
+  hashedPassword?: InputMaybe<Scalars['String']>;
+  resetToken?: InputMaybe<Scalars['String']>;
+  resetTokenExpiresAt?: InputMaybe<Scalars['DateTime']>;
+  roles: Array<InputMaybe<Scalars['String']>>;
+  salt?: InputMaybe<Scalars['String']>;
+  stripeClientSecret?: InputMaybe<Scalars['String']>;
+  subscriptionId?: InputMaybe<Scalars['String']>;
+  subscriptionName?: InputMaybe<Scalars['String']>;
+  subscriptionStatus?: InputMaybe<SubscriptionStatus>;
+};
+
+export type User = {
+  __typename?: 'User';
+  email: Scalars['String'];
+  hashedPassword: Scalars['String'];
+  id: Scalars['Int'];
+  product: Array<Maybe<Product>>;
+  resetToken?: Maybe<Scalars['String']>;
+  resetTokenExpiresAt?: Maybe<Scalars['DateTime']>;
+  roles: Array<Maybe<Scalars['String']>>;
+  salt: Scalars['String'];
+  stripeClientSecret?: Maybe<Scalars['String']>;
+  subscriptionId?: Maybe<Scalars['String']>;
+  subscriptionName?: Maybe<Scalars['String']>;
+  subscriptionStatus?: Maybe<SubscriptionStatus>;
 };
 
 
@@ -108,36 +236,51 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   BigInt: ResolverTypeWrapper<Scalars['BigInt']>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>;
+  CreateProductInput: CreateProductInput;
+  CreateUserInput: CreateUserInput;
   Date: ResolverTypeWrapper<Scalars['Date']>;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
   ID: ResolverTypeWrapper<Scalars['ID']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   JSON: ResolverTypeWrapper<Scalars['JSON']>;
   JSONObject: ResolverTypeWrapper<Scalars['JSONObject']>;
+  Mutation: ResolverTypeWrapper<{}>;
+  Product: ResolverTypeWrapper<PrismaProduct>;
   Query: ResolverTypeWrapper<{}>;
   Redwood: ResolverTypeWrapper<Redwood>;
   String: ResolverTypeWrapper<Scalars['String']>;
   Subscription: ResolverTypeWrapper<{}>;
+  SubscriptionStatus: SubscriptionStatus;
   Time: ResolverTypeWrapper<Scalars['Time']>;
   URL: ResolverTypeWrapper<Scalars['URL']>;
+  UpdateProductInput: UpdateProductInput;
+  UpdateUserInput: UpdateUserInput;
+  User: ResolverTypeWrapper<PrismaUser>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   BigInt: Scalars['BigInt'];
   Boolean: Scalars['Boolean'];
+  CreateProductInput: CreateProductInput;
+  CreateUserInput: CreateUserInput;
   Date: Scalars['Date'];
   DateTime: Scalars['DateTime'];
   ID: Scalars['ID'];
   Int: Scalars['Int'];
   JSON: Scalars['JSON'];
   JSONObject: Scalars['JSONObject'];
+  Mutation: {};
+  Product: PrismaProduct;
   Query: {};
   Redwood: Redwood;
   String: Scalars['String'];
   Subscription: {};
   Time: Scalars['Time'];
   URL: Scalars['URL'];
+  UpdateProductInput: UpdateProductInput;
+  UpdateUserInput: UpdateUserInput;
+  User: PrismaUser;
 };
 
 export type requireAuthDirectiveArgs = {
@@ -170,9 +313,32 @@ export interface JSONObjectScalarConfig extends GraphQLScalarTypeConfig<Resolver
   name: 'JSONObject';
 }
 
+export type MutationResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  createProduct?: Resolver<ResolversTypes['Product'], ParentType, ContextType, RequireFields<MutationcreateProductArgs, 'input'>>;
+  createUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationcreateUserArgs, 'input'>>;
+  deleteProduct?: Resolver<ResolversTypes['Product'], ParentType, ContextType, RequireFields<MutationdeleteProductArgs, 'id'>>;
+  deleteUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationdeleteUserArgs, 'id'>>;
+  updateProduct?: Resolver<ResolversTypes['Product'], ParentType, ContextType, RequireFields<MutationupdateProductArgs, 'id' | 'input'>>;
+  updateUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationupdateUserArgs, 'id' | 'input'>>;
+};
+
+export type ProductResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Product'] = ResolversParentTypes['Product']> = {
+  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  imageUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  user?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type QueryResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  product?: Resolver<Maybe<ResolversTypes['Product']>, ParentType, ContextType, RequireFields<QueryproductArgs, 'id'>>;
+  products?: Resolver<Array<ResolversTypes['Product']>, ParentType, ContextType>;
   redwood?: Resolver<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
   subscriptions?: Resolver<Array<ResolversTypes['Subscription']>, ParentType, ContextType>;
+  user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryuserArgs, 'id'>>;
+  users?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
 };
 
 export type RedwoodResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Redwood'] = ResolversParentTypes['Redwood']> = {
@@ -198,17 +364,36 @@ export interface URLScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes[
   name: 'URL';
 }
 
+export type UserResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  hashedPassword?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  product?: Resolver<Array<Maybe<ResolversTypes['Product']>>, ParentType, ContextType>;
+  resetToken?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  resetTokenExpiresAt?: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
+  roles?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
+  salt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  stripeClientSecret?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  subscriptionId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  subscriptionName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  subscriptionStatus?: Resolver<Maybe<ResolversTypes['SubscriptionStatus']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = RedwoodGraphQLContext> = {
   BigInt?: GraphQLScalarType;
   Date?: GraphQLScalarType;
   DateTime?: GraphQLScalarType;
   JSON?: GraphQLScalarType;
   JSONObject?: GraphQLScalarType;
+  Mutation?: MutationResolvers<ContextType>;
+  Product?: ProductResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Redwood?: RedwoodResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   Time?: GraphQLScalarType;
   URL?: GraphQLScalarType;
+  User?: UserResolvers<ContextType>;
 };
 
 export type DirectiveResolvers<ContextType = RedwoodGraphQLContext> = {

@@ -7,3 +7,8 @@ Welcome to part 2. In part 1, we put together an application that allows users t
 ```bash
 yarn rw generate page ManageSubscription
 ```
+
+TODO:
+- g cell Product
+- g page CreateProduct
+- Homepage with products / category

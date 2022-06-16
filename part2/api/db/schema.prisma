@@ -26,4 +26,15 @@ model User {
   subscriptionId      String?
   subscriptionName    String?
   subscriptionStatus  SubscriptionStatus?
+  product             Product[]
+}
+
+model Product {
+  id          Int     @id @default(autoincrement())
+  name        String
+  category    String
+  description String?
+  imageUrl    String?
+  user        User    @relation(fields: [userId], references: [id])
+  userId      Int
 }
