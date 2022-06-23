@@ -764,7 +764,7 @@ export const Success = ({
   const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
   const createSubscription = async (subscription: Subscription) => {
-    const response = await fetch('/.redwood/functions/createSubscription', {
+    const response = await fetch(`${global.RWJS_API_URL}/createSubscription`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -797,6 +797,7 @@ export const Success = ({
   )
 }
 ```
+
 Note the `await reauthenticate()` call. This is to make sure our local `currentUser` is up to date with the latest information concerning the subscription. If the user had a subscription before, the backend reset the subscription state to `init`.
 
 **2. Display a form to enter payment information**

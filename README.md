@@ -16,7 +16,7 @@ Ok, now that we know we're going to buy an Island in the Pacific very soon, we n
 - List Subscriptions
 - Subscribe
 
-Part 2:
+[Part 2:](part2/readme.md)
 
 - View my subscription
 - Cancel or change my subscription

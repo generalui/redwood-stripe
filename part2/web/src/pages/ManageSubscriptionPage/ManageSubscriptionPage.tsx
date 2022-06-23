@@ -6,16 +6,19 @@ const ManageSubscriptionPage = () => {
   const { currentUser, reauthenticate } = useAuth()
   const cancelSubscription = async () => {
     if (confirm('Do you really want to cancel your subscriptions?')) {
-      const response = await fetch('/.redwood/functions/cancelSubscription', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: currentUser.id,
-          subscriptionId: currentUser.subscriptionId,
-        }),
-      })
+      const response = await fetch(
+        `${global.RWJS_API_URL}/cancelSubscription`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: currentUser.id,
+            subscriptionId: currentUser.subscriptionId,
+          }),
+        }
+      )
       if (response.status === 201) {
         await reauthenticate()
         navigate(routes.home())

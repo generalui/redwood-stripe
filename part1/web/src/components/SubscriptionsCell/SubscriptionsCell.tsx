@@ -30,7 +30,7 @@ export const Success = ({
   const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
   const createSubscription = async (subscription: Subscription) => {
-    const response = await fetch('/.redwood/functions/createSubscription', {
+    const response = await fetch(`${global.RWJS_API_URL}/createSubscription`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
