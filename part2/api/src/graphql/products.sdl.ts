@@ -1,7 +1,9 @@
 export const schema = gql`
   type Product {
     id: Int!
+    price: Float!
     name: String!
+    category: String!
     description: String
     imageUrl: String
     user: User!
@@ -9,21 +11,25 @@ export const schema = gql`
   }
 
   type Query {
-    products: [Product!]! @requireAuth
+    products(userId: Int, category: String): [Product!]! @requireAuth
     product(id: Int!): Product @requireAuth
   }
 
   input CreateProductInput {
     name: String!
+    category: String!
     description: String
     imageUrl: String
+    price: Float!
     userId: Int!
   }
 
   input UpdateProductInput {
     name: String
+    category: String
     description: String
     imageUrl: String
+    price: Float
     userId: Int
   }
 

@@ -18,6 +18,7 @@ const Routes = () => {
           <Route path="/pick-subscription" page={PickSubscriptionPage} name="pickSubscription" />
           <Route path="/sell-stuff" page={SellStuffPage} name="sellStuff" />
           <Route path="/manage-subscription" page={ManageSubscriptionPage} name="manageSubscription" />
+          <Route path="/create-product" page={CreateProductPage} name="createProduct" />
         </Private>
         <Route path="/" page={HomePage} name="home" />
       </Set>

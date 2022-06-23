@@ -28,9 +28,11 @@ export type Scalars = {
 };
 
 export type CreateProductInput = {
+  category: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   imageUrl?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  price: Scalars['Float'];
   userId: Scalars['Int'];
 };
 
@@ -91,10 +93,12 @@ export type MutationupdateUserArgs = {
 
 export type Product = {
   __typename?: 'Product';
+  category: Scalars['String'];
   description?: Maybe<Scalars['String']>;
   id: Scalars['Int'];
   imageUrl?: Maybe<Scalars['String']>;
   name: Scalars['String'];
+  price: Scalars['Float'];
   user: User;
   userId: Scalars['Int'];
 };
@@ -112,6 +116,12 @@ export type Query = {
 
 export type QueryproductArgs = {
   id: Scalars['Int'];
+};
+
+
+export type QueryproductsArgs = {
+  category?: InputMaybe<Scalars['String']>;
+  userId?: InputMaybe<Scalars['Int']>;
 };
 
 
@@ -141,9 +151,11 @@ export type SubscriptionStatus =
   | 'success';
 
 export type UpdateProductInput = {
+  category?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
   imageUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
+  price?: InputMaybe<Scalars['Float']>;
   userId?: InputMaybe<Scalars['Int']>;
 };
 
@@ -240,6 +252,7 @@ export type ResolversTypes = {
   CreateUserInput: CreateUserInput;
   Date: ResolverTypeWrapper<Scalars['Date']>;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']>;
+  Float: ResolverTypeWrapper<Scalars['Float']>;
   ID: ResolverTypeWrapper<Scalars['ID']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   JSON: ResolverTypeWrapper<Scalars['JSON']>;
@@ -266,6 +279,7 @@ export type ResolversParentTypes = {
   CreateUserInput: CreateUserInput;
   Date: Scalars['Date'];
   DateTime: Scalars['DateTime'];
+  Float: Scalars['Float'];
   ID: Scalars['ID'];
   Int: Scalars['Int'];
   JSON: Scalars['JSON'];
@@ -323,10 +337,12 @@ export type MutationResolvers<ContextType = RedwoodGraphQLContext, ParentType ex
 };
 
 export type ProductResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Product'] = ResolversParentTypes['Product']> = {
+  category?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   imageUrl?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  price?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   user?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -334,7 +350,7 @@ export type ProductResolvers<ContextType = RedwoodGraphQLContext, ParentType ext
 
 export type QueryResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   product?: Resolver<Maybe<ResolversTypes['Product']>, ParentType, ContextType, RequireFields<QueryproductArgs, 'id'>>;
-  products?: Resolver<Array<ResolversTypes['Product']>, ParentType, ContextType>;
+  products?: Resolver<Array<ResolversTypes['Product']>, ParentType, ContextType, Partial<QueryproductsArgs>>;
   redwood?: Resolver<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
   subscriptions?: Resolver<Array<ResolversTypes['Subscription']>, ParentType, ContextType>;
   user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryuserArgs, 'id'>>;

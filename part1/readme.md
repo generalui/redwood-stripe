@@ -16,7 +16,7 @@ nvm use v16.15.1
 
 ## postgres
 
-`brew install postgres` on mac os, otherwise you can look up (postgres download page)[https://www.postgresql.org/download/]
+`brew install postgres` on mac os in which case (this page)[https://gist.github.com/ibraheem4/ce5ccd3e4d7a65589ce84f2a3b7c23a3] can be useful, otherwise you can look up (postgres download page)[https://www.postgresql.org/download/]
 Another option is to use (docker)[https://docs.docker.com/get-started/] (that's what I am using), here is the docker compose file you can use:
 
 ```yml

@@ -20,9 +20,11 @@ export type Scalars = {
 };
 
 export type CreateProductInput = {
+  category: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   imageUrl?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
+  price: Scalars['Float'];
   userId: Scalars['Int'];
 };
 
@@ -83,10 +85,12 @@ export type MutationupdateUserArgs = {
 
 export type Product = {
   __typename?: 'Product';
+  category: Scalars['String'];
   description?: Maybe<Scalars['String']>;
   id: Scalars['Int'];
   imageUrl?: Maybe<Scalars['String']>;
   name: Scalars['String'];
+  price: Scalars['Float'];
   user: User;
   userId: Scalars['Int'];
 };
@@ -104,6 +108,12 @@ export type Query = {
 
 export type QueryproductArgs = {
   id: Scalars['Int'];
+};
+
+
+export type QueryproductsArgs = {
+  category?: InputMaybe<Scalars['String']>;
+  userId?: InputMaybe<Scalars['Int']>;
 };
 
 
@@ -133,9 +143,11 @@ export type SubscriptionStatus =
   | 'success';
 
 export type UpdateProductInput = {
+  category?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
   imageUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
+  price?: InputMaybe<Scalars['Float']>;
   userId?: InputMaybe<Scalars['Int']>;
 };
 
@@ -168,7 +180,22 @@ export type User = {
   subscriptionStatus?: Maybe<SubscriptionStatus>;
 };
 
+export type ProductsQueryVariables = Exact<{
+  userId?: InputMaybe<Scalars['Int']>;
+  category?: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type ProductsQuery = { __typename?: 'Query', products: Array<{ __typename?: 'Product', id: number, name: string, category: string, description?: string | null, price: number, imageUrl?: string | null }> };
+
 export type SubscriptionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SubscriptionsQuery = { __typename?: 'Query', subscriptions: Array<{ __typename?: 'Subscription', id: string, name: string, price: number, currency: string, description?: string | null }> };
+
+export type CreateProductMutationVariables = Exact<{
+  input: CreateProductInput;
+}>;
+
+
+export type CreateProductMutation = { __typename?: 'Mutation', createProduct: { __typename?: 'Product', name: string, description?: string | null, price: number } };

@@ -9,6 +9,6 @@ yarn rw generate page ManageSubscription
 ```
 
 TODO:
-- g cell Product
-- g page CreateProduct
+x g cell Product
+x g page CreateProduct
 - Homepage with products / category

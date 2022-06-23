@@ -5,8 +5,14 @@ import type {
   ProductResolvers,
 } from 'types/graphql'
 
-export const products: QueryResolvers['products'] = () => {
-  return db.product.findMany()
+export const products: QueryResolvers['products'] = ({
+  userId,
+  category,
+}: {
+  userId?: number
+  category?: string
+}) => {
+  return db.product.findMany({ where: { userId, category } })
 }
 
 export const product: QueryResolvers['product'] = ({ id }) => {
@@ -18,8 +24,9 @@ export const product: QueryResolvers['product'] = ({ id }) => {
 export const createProduct: MutationResolvers['createProduct'] = ({
   input,
 }) => {
+  const { userId, ...data } = input
   return db.product.create({
-    data: input,
+    data: { ...data, user: { connect: { id: userId } } },
   })
 }
 
