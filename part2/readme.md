@@ -11,6 +11,7 @@ yarn rw generate page ManageSubscription
 ```
 
 Let's have 2 options for this basic subscription management:
+
 1. Change Subscription
 2. Cancel Subscription
 
@@ -97,6 +98,7 @@ model User {
 In `user.sdl.ts`, you also need to add `subscriptionId: String` to `CreateUserInput` and `UpdateUserInput`
 
 And the create subscription handler in `createSubscription.ts` on the API side also need to be slighty modified to take the `subscriptionId` into account:
+
 ```ts
 export const handler = async (event: APIGatewayEvent) => {
   logger.info('Invoked createSubscription function')
@@ -129,6 +131,7 @@ export const handler = async (event: APIGatewayEvent) => {
 ```
 
 Last place to add the subscription id to is `getCurrentUser` in `api/src/lib/auth.ts`:
+
 ```ts
 export const getCurrentUser = async (session) => {
   return await db.user.findUnique({
@@ -144,7 +147,6 @@ export const getCurrentUser = async (session) => {
   })
 }
 ```
-
 
 ## Create a new cancel subscription function
 
@@ -281,6 +283,7 @@ export const CATEGORIES = [
 For example... (That being said, if that doesn't already exist, a market place for these luxury items seems like a good idea to me)
 
 We can now add the `CreateProduct` page:
+
 ```
 yarn rw g page CreateProduct
 ```
@@ -509,6 +512,6 @@ export default HomePage
 
 # End of part 2
 
-In this part we mainly solidified our knowledge of basic Redwood concepts and generator, using functions, services, cells and mutations to create and list products for our marketplace.
+In this part we mainly solidified our knowledge of basic Redwood concepts and generator, using functions, services, cells and mutations to create and list products for our marketplace. You can look up the github repository for [this part](https://github.com/generalui/redwood-stripe/tree/main/part2)
 
 In the next [part](../part3/readme.md) we will dive a little bit more into the Stripe API in order to buy the products that you've just created.

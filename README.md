@@ -23,7 +23,7 @@ Ok, now that we know we're going to buy an Island in the Pacific very soon, we n
 - Add products
 - List products by category
 
-Part 3:
+[Part 3:](part3/readme.md)
 
 - Buy products
 - View my products
