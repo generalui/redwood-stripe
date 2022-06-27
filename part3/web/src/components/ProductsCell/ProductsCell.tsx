@@ -1,5 +1,6 @@
 import type { ProductsQuery } from 'types/graphql'
 import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
+import { Link, routes } from '@redwoodjs/router'
 
 export const QUERY = gql`
   query ProductsQuery($userId: Int, $category: String) {
@@ -33,6 +34,7 @@ export const Success = ({ products }: CellSuccessProps<ProductsQuery>) => {
           <th>category</th>
           <th>image</th>
           <th>price</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -49,6 +51,9 @@ export const Success = ({ products }: CellSuccessProps<ProductsQuery>) => {
                 )}
               </td>
               <td>{item.price}</td>
+              <td>
+                <Link to={routes.buyProduct({ id: item.id })}>Buy</Link>
+              </td>
             </tr>
           )
         })}

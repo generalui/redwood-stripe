@@ -19,6 +19,7 @@ const Routes = () => {
           <Route path="/sell-stuff" page={SellStuffPage} name="sellStuff" />
           <Route path="/manage-subscription" page={ManageSubscriptionPage} name="manageSubscription" />
           <Route path="/create-product" page={CreateProductPage} name="createProduct" />
+          <Route path="/buy-product/:id" page={BuyProductPage} name="buyProduct" />
         </Private>
         <Route path="/" page={HomePage} name="home" />
       </Set>

@@ -180,6 +180,13 @@ export type User = {
   subscriptionStatus?: Maybe<SubscriptionStatus>;
 };
 
+export type FindProductQueryVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type FindProductQuery = { __typename?: 'Query', product?: { __typename?: 'Product', id: number, price: number, name: string, category: string, description?: string | null, imageUrl?: string | null } | null };
+
 export type ProductsQueryVariables = Exact<{
   userId?: InputMaybe<Scalars['Int']>;
   category?: InputMaybe<Scalars['String']>;
