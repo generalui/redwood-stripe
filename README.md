@@ -28,12 +28,12 @@ Ok, now that we know we're going to buy an Island in the Pacific very soon, we n
 - Buy products
 - View my products
 
-Part 4:
+[Part 4:](part4/readme.md)
 
 - Check subscription validity
 - Subscriber payouts (with commission)
 
-Part 5:
+[Part 5:](part5/readme.md)
 
 - (admin) Payment list
 - (admin) make payment
