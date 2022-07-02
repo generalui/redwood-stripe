@@ -49,4 +49,10 @@ export const deleteProduct: MutationResolvers['deleteProduct'] = ({ id }) => {
 export const Product: ProductResolvers = {
   user: (_obj, { root }) =>
     db.product.findUnique({ where: { id: root.id } }).user(),
+  owned: async (_obj, { root }) => {
+    const count = await db.purchase.count({
+      where: { userId: context.currentUser?.id, productId: root.id },
+    })
+    return count > 0
+  },
 }

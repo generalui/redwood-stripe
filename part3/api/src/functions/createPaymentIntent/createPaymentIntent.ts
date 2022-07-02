@@ -3,7 +3,6 @@ import { db } from 'src/lib/db'
 import { logger } from 'src/lib/logger'
 import { stripe } from 'src/lib/stripe'
 import { User, Product } from '@prisma/client'
-import Stripe from 'stripe'
 
 export const handler = async (event: APIGatewayEvent) => {
   logger.info('Invoked createSubscription function')
@@ -14,21 +13,22 @@ export const handler = async (event: APIGatewayEvent) => {
   if (userId && productId) {
     const user = await getUser(+userId)
     const product = await getProduct(+productId)
-    const customer = await stripe.customers.create({
-      name: user.email,
-    })
     try {
-      const { clientSecret, subscriptionId } = await createCheckoutSession(
-        customer.id,
-        product.price
-      )
-      await db.user.update({
-        where: { id: user.id },
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: product.price,
+        currency: 'usd',
+        customer: user.stripeCustomerId,
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      })
+      const clientSecret = paymentIntent.client_secret
+      const purchase = await db.purchase.create({
         data: {
-          stripeClientSecret: clientSecret,
-          subscriptionStatus: 'init',
-          subscriptionName: product.name,
-          subscriptionId,
+          userId,
+          productId,
+          clientSecret,
+          status: 'init',
         },
       })
       return {
@@ -38,6 +38,7 @@ export const handler = async (event: APIGatewayEvent) => {
         },
         body: JSON.stringify({
           clientSecret,
+          purchaseId: purchase.id,
         }),
       }
     } catch (error) {
@@ -66,6 +67,16 @@ async function getUser(userId: number): Promise<User> {
   if (!user) {
     throw new Error(`No users found with id=${userId}`)
   }
+  if (!user.stripeCustomerId) {
+    const customer = await stripe.customers.create({
+      name: user.email,
+    })
+    await db.user.update({
+      where: { id: userId },
+      data: { stripeCustomerId: customer.id },
+    })
+    return { ...user, stripeCustomerId: customer.id }
+  }
   return user
 }
 
@@ -75,34 +86,4 @@ async function getProduct(productId: number): Promise<Product> {
     throw new Error(`No products found with id=${productId}`)
   }
   return product
-}
-
-async function createCheckoutSession(
-  customerId: string,
-  product: Product
-): Promise<{ clientSecret: string; subscriptionId: string }> {
-  const subscription = await stripe.checkout.sessions.create({
-    line_items: [
-      {
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: product.name,
-          },
-          unit_amount: product.price * 100,
-        },
-        quantity: 1,
-      },
-    ],
-    mode: 'payment',
-    success_url: 'https://example.com/success',
-    cancel_url: 'https://example.com/cancel',
-  })
-  return {
-    clientSecret: (
-      (subscription.latest_invoice as Stripe.Invoice)
-        .payment_intent as Stripe.PaymentIntent
-    ).client_secret,
-    subscriptionId: subscription.id,
-  }
 }

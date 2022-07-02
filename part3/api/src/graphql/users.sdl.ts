@@ -10,11 +10,11 @@ export const schema = gql`
     resetTokenExpiresAt: DateTime
     subscriptionId: String
     subscriptionName: String
-    subscriptionStatus: SubscriptionStatus
-    product: [Product]!
+    subscriptionStatus: PaymentStatus
+    products: [Product]!
   }
 
-  enum SubscriptionStatus {
+  enum PaymentStatus {
     init
     success
     failed
@@ -35,7 +35,7 @@ export const schema = gql`
     resetTokenExpiresAt: DateTime
     subscriptionId: String
     subscriptionName: String
-    subscriptionStatus: SubscriptionStatus
+    subscriptionStatus: PaymentStatus
   }
 
   input UpdateUserInput {
@@ -48,7 +48,7 @@ export const schema = gql`
     resetTokenExpiresAt: DateTime
     subscriptionId: String
     subscriptionName: String
-    subscriptionStatus: SubscriptionStatus
+    subscriptionStatus: PaymentStatus
   }
 
   type Mutation {

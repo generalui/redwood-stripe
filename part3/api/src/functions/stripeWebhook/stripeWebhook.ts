@@ -1,26 +1,34 @@
 import type { APIGatewayEvent } from 'aws-lambda'
 import { logger } from 'src/lib/logger'
-import { SubscriptionStatus } from '@prisma/client'
+import { PaymentStatus } from '@prisma/client'
 import { db } from 'src/lib/db'
 
 export const handler = async (event: APIGatewayEvent) => {
   logger.info('Invoked stripeWebhook function')
   const stripeEvent = JSON.parse(event.body)
-  const subscriptionStatus: SubscriptionStatus | null =
+  const status: PaymentStatus | null =
     stripeEvent.type === 'payment_intent.succeeded'
       ? 'success'
       : stripeEvent.type === 'payment_intent.payment_failed'
       ? 'failed'
       : null
-  if (subscriptionStatus) {
+  if (status) {
     const paymentIntent = stripeEvent.data.object
-    await db.user.updateMany({
-      where: { stripeClientSecret: paymentIntent.client_secret },
-      data: {
-        stripeClientSecret: null,
-        subscriptionStatus,
-      },
-    })
+    const clientSecret = paymentIntent.client_secret
+    if (await isSubscriptionClientSecret(clientSecret)) {
+      await db.user.updateMany({
+        where: { stripeClientSecret: clientSecret },
+        data: {
+          stripeClientSecret: null,
+          subscriptionStatus: status,
+        },
+      })
+    } else {
+      await db.purchase.updateMany({
+        where: { clientSecret },
+        data: { clientSecret: null, status: 'success' },
+      })
+    }
   }
 
   return {
@@ -32,4 +40,10 @@ export const handler = async (event: APIGatewayEvent) => {
       data: { received: true },
     }),
   }
+}
+
+async function isSubscriptionClientSecret(clientSecret: string) {
+  return !!(await db.user.count({
+    where: { stripeClientSecret: clientSecret },
+  }))
 }

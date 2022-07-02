@@ -1,14 +1,14 @@
 import { render } from '@redwoodjs/testing/web'
 
-import BuyProductPage from './BuyProductPage'
+import Checkout from './Checkout'
 
 //   Improve this test with help from the Redwood Testing Doc:
-//   https://redwoodjs.com/docs/testing#testing-pages-layouts
+//    https://redwoodjs.com/docs/testing#testing-components
 
-describe('BuyProductPage', () => {
+describe('Checkout', () => {
   it('renders successfully', () => {
     expect(() => {
-      render(<BuyProductPage />)
+      render(<Checkout />)
     }).not.toThrow()
   })
 })

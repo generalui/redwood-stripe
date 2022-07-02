@@ -8,6 +8,7 @@ export const schema = gql`
     imageUrl: String
     user: User!
     userId: Int!
+    owned: Boolean
   }
 
   type Query {

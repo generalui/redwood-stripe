@@ -28,6 +28,13 @@ export type CreateProductInput = {
   userId: Scalars['Int'];
 };
 
+export type CreatePurchaseInput = {
+  clientSecret?: InputMaybe<Scalars['String']>;
+  productId: Scalars['Int'];
+  status: PaymentStatus;
+  userId: Scalars['Int'];
+};
+
 export type CreateUserInput = {
   email: Scalars['String'];
   hashedPassword: Scalars['String'];
@@ -38,16 +45,19 @@ export type CreateUserInput = {
   stripeClientSecret?: InputMaybe<Scalars['String']>;
   subscriptionId?: InputMaybe<Scalars['String']>;
   subscriptionName?: InputMaybe<Scalars['String']>;
-  subscriptionStatus?: InputMaybe<SubscriptionStatus>;
+  subscriptionStatus?: InputMaybe<PaymentStatus>;
 };
 
 export type Mutation = {
   __typename?: 'Mutation';
   createProduct: Product;
+  createPurchase: Purchase;
   createUser: User;
   deleteProduct: Product;
+  deletePurchase: Purchase;
   deleteUser: User;
   updateProduct: Product;
+  updatePurchase: Purchase;
   updateUser: User;
 };
 
@@ -57,12 +67,22 @@ export type MutationcreateProductArgs = {
 };
 
 
+export type MutationcreatePurchaseArgs = {
+  input: CreatePurchaseInput;
+};
+
+
 export type MutationcreateUserArgs = {
   input: CreateUserInput;
 };
 
 
 export type MutationdeleteProductArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type MutationdeletePurchaseArgs = {
   id: Scalars['Int'];
 };
 
@@ -78,10 +98,21 @@ export type MutationupdateProductArgs = {
 };
 
 
+export type MutationupdatePurchaseArgs = {
+  id: Scalars['Int'];
+  input: UpdatePurchaseInput;
+};
+
+
 export type MutationupdateUserArgs = {
   id: Scalars['Int'];
   input: UpdateUserInput;
 };
+
+export type PaymentStatus =
+  | 'failed'
+  | 'init'
+  | 'success';
 
 export type Product = {
   __typename?: 'Product';
@@ -90,7 +121,19 @@ export type Product = {
   id: Scalars['Int'];
   imageUrl?: Maybe<Scalars['String']>;
   name: Scalars['String'];
+  owned?: Maybe<Scalars['Boolean']>;
   price: Scalars['Float'];
+  user: User;
+  userId: Scalars['Int'];
+};
+
+export type Purchase = {
+  __typename?: 'Purchase';
+  clientSecret?: Maybe<Scalars['String']>;
+  id: Scalars['Int'];
+  product: Product;
+  productId: Scalars['Int'];
+  status: PaymentStatus;
   user: User;
   userId: Scalars['Int'];
 };
@@ -99,6 +142,8 @@ export type Query = {
   __typename?: 'Query';
   product?: Maybe<Product>;
   products: Array<Product>;
+  purchase?: Maybe<Purchase>;
+  purchases: Array<Purchase>;
   redwood?: Maybe<Redwood>;
   subscriptions: Array<Subscription>;
   user?: Maybe<User>;
@@ -114,6 +159,11 @@ export type QueryproductArgs = {
 export type QueryproductsArgs = {
   category?: InputMaybe<Scalars['String']>;
   userId?: InputMaybe<Scalars['Int']>;
+};
+
+
+export type QuerypurchaseArgs = {
+  id: Scalars['Int'];
 };
 
 
@@ -137,17 +187,19 @@ export type Subscription = {
   price: Scalars['Int'];
 };
 
-export type SubscriptionStatus =
-  | 'failed'
-  | 'init'
-  | 'success';
-
 export type UpdateProductInput = {
   category?: InputMaybe<Scalars['String']>;
   description?: InputMaybe<Scalars['String']>;
   imageUrl?: InputMaybe<Scalars['String']>;
   name?: InputMaybe<Scalars['String']>;
   price?: InputMaybe<Scalars['Float']>;
+  userId?: InputMaybe<Scalars['Int']>;
+};
+
+export type UpdatePurchaseInput = {
+  clientSecret?: InputMaybe<Scalars['String']>;
+  productId?: InputMaybe<Scalars['Int']>;
+  status?: InputMaybe<PaymentStatus>;
   userId?: InputMaybe<Scalars['Int']>;
 };
 
@@ -161,7 +213,7 @@ export type UpdateUserInput = {
   stripeClientSecret?: InputMaybe<Scalars['String']>;
   subscriptionId?: InputMaybe<Scalars['String']>;
   subscriptionName?: InputMaybe<Scalars['String']>;
-  subscriptionStatus?: InputMaybe<SubscriptionStatus>;
+  subscriptionStatus?: InputMaybe<PaymentStatus>;
 };
 
 export type User = {
@@ -169,7 +221,7 @@ export type User = {
   email: Scalars['String'];
   hashedPassword: Scalars['String'];
   id: Scalars['Int'];
-  product: Array<Maybe<Product>>;
+  products: Array<Maybe<Product>>;
   resetToken?: Maybe<Scalars['String']>;
   resetTokenExpiresAt?: Maybe<Scalars['DateTime']>;
   roles: Array<Maybe<Scalars['String']>>;
@@ -177,15 +229,15 @@ export type User = {
   stripeClientSecret?: Maybe<Scalars['String']>;
   subscriptionId?: Maybe<Scalars['String']>;
   subscriptionName?: Maybe<Scalars['String']>;
-  subscriptionStatus?: Maybe<SubscriptionStatus>;
+  subscriptionStatus?: Maybe<PaymentStatus>;
 };
 
-export type FindProductQueryVariables = Exact<{
-  id: Scalars['Int'];
+export type PurchasesStatusQueryVariables = Exact<{
+  purchaseId: Scalars['Int'];
 }>;
 
 
-export type FindProductQuery = { __typename?: 'Query', product?: { __typename?: 'Product', id: number, price: number, name: string, category: string, description?: string | null, imageUrl?: string | null } | null };
+export type PurchasesStatusQuery = { __typename?: 'Query', purchase?: { __typename?: 'Purchase', status: PaymentStatus } | null };
 
 export type ProductsQueryVariables = Exact<{
   userId?: InputMaybe<Scalars['Int']>;
@@ -193,7 +245,7 @@ export type ProductsQueryVariables = Exact<{
 }>;
 
 
-export type ProductsQuery = { __typename?: 'Query', products: Array<{ __typename?: 'Product', id: number, name: string, category: string, description?: string | null, price: number, imageUrl?: string | null }> };
+export type ProductsQuery = { __typename?: 'Query', products: Array<{ __typename?: 'Product', id: number, name: string, category: string, description?: string | null, price: number, imageUrl?: string | null, owned?: boolean | null }> };
 
 export type SubscriptionsQueryVariables = Exact<{ [key: string]: never; }>;
 

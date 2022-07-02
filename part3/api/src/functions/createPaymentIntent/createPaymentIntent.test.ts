@@ -1,11 +1,11 @@
 import { mockHttpEvent } from '@redwoodjs/testing/api'
 
-import { handler } from './checkoutSession'
+import { handler } from './createPaymentIntent'
 
 //   Improve this test with help from the Redwood Testing Doc:
 //    https://redwoodjs.com/docs/testing#testing-functions
 
-describe('checkoutSession function', () => {
+describe('createPaymentIntent function', () => {
   it('Should respond with 200', async () => {
     const httpEvent = mockHttpEvent({
       queryStringParameters: {
@@ -17,7 +17,7 @@ describe('checkoutSession function', () => {
     const { data } = JSON.parse(response.body)
 
     expect(response.statusCode).toBe(200)
-    expect(data).toBe('checkoutSession function')
+    expect(data).toBe('createPaymentIntent function')
   })
 
   // You can also use scenarios to test your api functions
