@@ -352,11 +352,78 @@ We could create a function to retrieve the purchase by id, but I think that woul
 yarn rw g sdl purchases
 ```
 
+## Create my products page
+
+First we want to be able to query a user's purchases. In `purchases.sdl.ts`:
+```graphql
+type Query {
+  purchases(userId: Int): [Purchase!]! @requireAuth
+  purchase(id: Int!): Purchase @requireAuth
+}
+```
+And now we can check for this `userId` in `servcies/purchases/purchases.ts`:
+```ts
+export const purchases: QueryResolvers['purchases'] = ({
+  userId,
+}: {
+  userId?: number
+}) => {
+  if (userId) {
+    return db.purchase.findMany({ where: { userId } })
+  }
+  return db.purchase.findMany()
+}
+```
+
+```
+yarn rw g page MyPurchases
+yarn rw g cell MyPurchases
+```
+
+We will list purchases from the current user in this page
+Add the page in the right section of our `Routes.tsx`:
+```tsx
+  <Private unauthenticated="home">
+    <Route path="/pick-subscription" page={PickSubscriptionPage} name="pickSubscription" />
+    <Route path="/sell-stuff" page={SellStuffPage} name="sellStuff" />
+    <Route path="/manage-subscription" page={ManageSubscriptionPage} name="manageSubscription" />
+    <Route path="/create-product" page={CreateProductPage} name="createProduct" />
+    <Route path="/my-purchases" page={MyPurchasesPage} name="myPurchases" />
+  </Private>
+```
+
+`MyPurchasesPage.tsx` is just a wrapper for `MyPurchasesCell.tsx`
+```tsx
+import { useAuth } from '@redwoodjs/auth'
+import { MetaTags } from '@redwoodjs/web'
+import MyPurchasesCell from 'src/components/MyPurchasesCell'
+
+const MyPurchasesPage = () => {
+  const { currentUser } = useAuth()
+  return (
+    <>
+      <MetaTags title="My purchases" description="My purchases" />
+      <h1>My Products</h1>
+      {currentUser ? (
+        <>
+          <MyPurchasesCell />
+        </>
+      ) : (
+        'Login/Signup to access your purchases'
+      )}
+    </>
+  )
+}
+
+export default MyPurchasesPage
+```
+
 ## implement checkForConfirmation
 
 We're now ready to get to the implementation of the `checkForConfirmation` method that will poll the `Purchase` table through the `purchase(id: Int!)` graphql Query.
 
 Here is the query to be added to `Checkout.tsx`
+
 ```tsx
 export const PURCHASE_STATUS_QUERY = gql`
   query PurchasesStatusQuery($purchaseId: Int!) {
@@ -368,6 +435,7 @@ export const PURCHASE_STATUS_QUERY = gql`
 ```
 
 Since we're going to be polling that endpoint we'll use `useLazyQuery` instead of `useQuery`:
+
 ```tsx
 import { useLazyQuery } from '@apollo/client'
 ...
@@ -377,17 +445,21 @@ const [getPurchaseStatus, { loading, error, data }] = useLazyQuery(
 ```
 
 We can now use this query in `checkForConfirmation`:
+
 ```tsx
-const checkForConfirmation = () =>
+const checkForConfirmation = () => {
   getPurchaseStatus({ variables: { purchaseId } })
+}
 
 useEffect(() => {
-  if (data.purchase.status === 'success') {
-    navigate(routes.home())
-    return
-  }
-  if (data.purchase.status !== 'failed') {
-    setTimeout(checkForConfirmation, 2000)
+  if (data?.purchase) {
+    if (data.purchase.status === 'success') {
+      navigate(routes.myPurchases())
+      return
+    }
+    if (data.purchase.status !== 'failed') {
+      setTimeout(checkForConfirmation, 2000)
+    }
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [data])
@@ -398,6 +470,7 @@ useEffect(() => {
 One limitation of our market place for luxury goods is that one item can be bought many times, which would make sense if we sold candies, but makes less sense if the product is a yacht or an island... As an exercise you can try to take this limitation into account and only display items that have not been bought yet.
 
 For now we'll just add an optional `owned` attribute to our `Product` graphql type. Update `product.sdl.ts` with:
+
 ```graphql
 type Product {
   id: Int!
@@ -413,6 +486,7 @@ type Product {
 ```
 
 And in the service `services/products/products.ts` add `owned` to the resolver:
+
 ```ts
 export const Product: ProductResolvers = {
   user: (_obj, { root }) =>
@@ -427,6 +501,7 @@ export const Product: ProductResolvers = {
 ```
 
 This should now be available in the frontend and more precisely in our `ProductsCell.tsx`
+
 ```tsx
 export const QUERY = gql`
   query ProductsQuery($userId: Int, $category: String) {
@@ -442,9 +517,11 @@ export const QUERY = gql`
   }
 `
 ```
+
 If `owned` is still not recognized by intellisense, run `yarn rw g types` and, if needed, reload the editor. I have noticed that I often have to reload VS Code in these kind of situations
 
 Lastly, we can add a column to our product table to tell if the product is owned by the current user or not:
+
 ```tsx
 <td>{item.owned && <span>You own it</span>}</td>
 ```

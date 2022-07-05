@@ -167,6 +167,11 @@ export type QuerypurchaseArgs = {
 };
 
 
+export type QuerypurchasesArgs = {
+  userId?: InputMaybe<Scalars['Int']>;
+};
+
+
 export type QueryuserArgs = {
   id: Scalars['Int'];
 };
@@ -238,6 +243,13 @@ export type PurchasesStatusQueryVariables = Exact<{
 
 
 export type PurchasesStatusQuery = { __typename?: 'Query', purchase?: { __typename?: 'Purchase', status: PaymentStatus } | null };
+
+export type PurchasessQueryVariables = Exact<{
+  userId?: InputMaybe<Scalars['Int']>;
+}>;
+
+
+export type PurchasessQuery = { __typename?: 'Query', purchases: Array<{ __typename?: 'Purchase', product: { __typename?: 'Product', id: number, name: string, description?: string | null, imageUrl?: string | null, category: string, price: number } }> };
 
 export type ProductsQueryVariables = Exact<{
   userId?: InputMaybe<Scalars['Int']>;

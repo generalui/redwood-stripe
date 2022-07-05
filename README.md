@@ -26,16 +26,16 @@ Ok, now that we know we're going to buy an Island in the Pacific very soon, we n
 [Part 3:](part3/readme.md)
 
 - Buy products
-- View my products
+- Show if I own a product
 
 [Part 4:](part4/readme.md)
 
+- Seller payouts (minus platform fee)
 - Check subscription validity
-- Subscriber payouts (with commission)
 
 [Part 5:](part5/readme.md)
 
 - (admin) Payment list
-- (admin) make payment
+- (admin) Transfer seller balance to bank account
 - (admin) Subscription list
 - 🏝️

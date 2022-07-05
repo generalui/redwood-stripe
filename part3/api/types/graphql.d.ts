@@ -175,6 +175,11 @@ export type QuerypurchaseArgs = {
 };
 
 
+export type QuerypurchasesArgs = {
+  userId?: InputMaybe<Scalars['Int']>;
+};
+
+
 export type QueryuserArgs = {
   id: Scalars['Int'];
 };
@@ -425,7 +430,7 @@ export type QueryResolvers<ContextType = RedwoodGraphQLContext, ParentType exten
   product?: Resolver<Maybe<ResolversTypes['Product']>, ParentType, ContextType, RequireFields<QueryproductArgs, 'id'>>;
   products?: Resolver<Array<ResolversTypes['Product']>, ParentType, ContextType, Partial<QueryproductsArgs>>;
   purchase?: Resolver<Maybe<ResolversTypes['Purchase']>, ParentType, ContextType, RequireFields<QuerypurchaseArgs, 'id'>>;
-  purchases?: Resolver<Array<ResolversTypes['Purchase']>, ParentType, ContextType>;
+  purchases?: Resolver<Array<ResolversTypes['Purchase']>, ParentType, ContextType, Partial<QuerypurchasesArgs>>;
   redwood?: Resolver<Maybe<ResolversTypes['Redwood']>, ParentType, ContextType>;
   subscriptions?: Resolver<Array<ResolversTypes['Subscription']>, ParentType, ContextType>;
   user?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<QueryuserArgs, 'id'>>;
