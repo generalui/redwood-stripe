@@ -11,5 +11,6 @@ export const schema = gql`
 
   type Query {
     subscriptions: [Subscription!]! @skipAuth
+    isSubscriptionValid(userId: Int!): Boolean! @skipAuth
   }
 `

@@ -140,6 +140,7 @@ export type Purchase = {
 
 export type Query = {
   __typename?: 'Query';
+  isSubscriptionValid: Scalars['Boolean'];
   product?: Maybe<Product>;
   products: Array<Product>;
   purchase?: Maybe<Purchase>;
@@ -148,6 +149,11 @@ export type Query = {
   subscriptions: Array<Subscription>;
   user?: Maybe<User>;
   users: Array<User>;
+};
+
+
+export type QueryisSubscriptionValidArgs = {
+  userId: Scalars['Int'];
 };
 
 
@@ -164,6 +170,11 @@ export type QueryproductsArgs = {
 
 export type QuerypurchaseArgs = {
   id: Scalars['Int'];
+};
+
+
+export type QuerypurchasesArgs = {
+  userId?: InputMaybe<Scalars['Int']>;
 };
 
 
@@ -232,12 +243,26 @@ export type User = {
   subscriptionStatus?: Maybe<PaymentStatus>;
 };
 
+export type IsSubscriptionValidQueryVariables = Exact<{
+  userId: Scalars['Int'];
+}>;
+
+
+export type IsSubscriptionValidQuery = { __typename?: 'Query', isSubscriptionValid: boolean };
+
 export type PurchasesStatusQueryVariables = Exact<{
   purchaseId: Scalars['Int'];
 }>;
 
 
 export type PurchasesStatusQuery = { __typename?: 'Query', purchase?: { __typename?: 'Purchase', status: PaymentStatus } | null };
+
+export type PurchasessQueryVariables = Exact<{
+  userId?: InputMaybe<Scalars['Int']>;
+}>;
+
+
+export type PurchasessQuery = { __typename?: 'Query', purchases: Array<{ __typename?: 'Purchase', product: { __typename?: 'Product', id: number, name: string, description?: string | null, imageUrl?: string | null, category: string, price: number } }> };
 
 export type ProductsQueryVariables = Exact<{
   userId?: InputMaybe<Scalars['Int']>;

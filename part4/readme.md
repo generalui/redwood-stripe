@@ -347,8 +347,124 @@ async function getProduct(
 
 You can now purchase one of the product and look on the [connect dashboard](https://dashboard.stripe.com/test/connect/accounts/overview) to see the seller being credited
 
+## Verify subscription validity
+
+Before selling stuff on the platfrom we will check that the seller has a valid subscription. Ideally we would want to check the validity of the seller's subscription for every product regularly, but that's outside the scope of this tutorial.
+
+Let's add a `isSubscriptionValid` query to `subscriptions.sdl.ts`:
+```graphql
+  type Query {
+    subscriptions: [Subscription!]! @skipAuth
+    isSubscriptionValid(userId: Int!): Boolean! @skipAuth
+  }
+```
+And in `services/subscriptions.ts`:
+```ts
+export const isSubscriptionValid = async ({ userId }: { userId: number }) => {
+  const user = await db.user.findUnique({ where: { id: userId } })
+  if (user?.subscriptionStatus === 'success') {
+    const subscription = await stripe.subscriptions.retrieve(
+      user.subscriptionId
+    )
+    return subscription.status === 'active'
+  }
+  return false
+}
+```
+
+We now want to render the `Add Product` button on `SellStuffPage` only if the subscription is valid.
+We need a new Cell to tell us if the subscription is valid prior to rendering the button
+```
+yarn rw g cell AddProduct
+```
+
+And add the following code to `AddProductCell.tsx`:
+```tsx
+import { Link, routes } from '@redwoodjs/router'
+import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
+import {
+  IsSubscriptionValidQuery,
+  IsSubscriptionValidQueryVariables,
+} from 'types/graphql'
+
+export const QUERY = gql`
+  query IsSubscriptionValidQuery($userId: Int!) {
+    isSubscriptionValid(userId: $userId)
+  }
+`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({
+  error,
+}: CellFailureProps<IsSubscriptionValidQueryVariables>) => (
+  <div style={{ color: 'red' }}>Error: {error.message}</div>
+)
+
+export const Success = ({
+  isSubscriptionValid,
+}: CellSuccessProps<
+  IsSubscriptionValidQuery,
+  IsSubscriptionValidQueryVariables
+>) => {
+  if (isSubscriptionValid) {
+    return <Link to={routes.createProduct()}>Add Product</Link>
+  } else {
+    return null
+  }
+}
+```
+
+We can now edit `SellStuffPage.tsx`:
+```tsx
+import { useAuth } from '@redwoodjs/auth'
+import { MetaTags } from '@redwoodjs/web'
+import ProductsCell from 'src/components/ProductsCell'
+import AddProductCell from 'src/components/AddProductCell'
+import { stripeOnboarding } from 'src/lib/stripeOnboarding'
+
+const SellStuffPage = () => {
+  const { currentUser } = useAuth()
+
+  const completeStripeOnboarding = () => {
+    stripeOnboarding(currentUser.id)
+  }
+  return (
+    <>
+      <MetaTags title="Sell Stuff" description="Sell Stuff page" />
+
+      <h1>Sell Stuff</h1>
+      {currentUser?.stripeOnboardingDone ? (
+        <>
+          <ProductsCell userId={currentUser.id} />
+          <AddProductCell userId={currentUser.id} />
+        </>
+      ) : (
+        <>
+          <div>
+            You need to complete Stripe onboarding before adding products to
+            sell on the platform{' '}
+            <button onClick={completeStripeOnboarding}>
+              Stripe Onboarding
+            </button>
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
+export default SellStuffPage
+```
+
+You can now check that the `Add Product` button is rendering for a subscribed seller.
+To check with a cancelled subscription go to https://dashboard.stripe.com/test/subscriptions and cancel the subscription of your logged in seller, then refresh the sell stuff page and the `Add Product` has disappeared.
+
+
 # End of part 4
 
-In this part we ... You can look up the github repository for [this part](https://github.com/generalui/redwood-stripe/tree/main/part4)
+In this part we dug into Stripe Connect. There is a lot more to learn, Stripe covers a lot of use cases: Multi party payments, Multiple subscriptions and subscriptions quantities, customization of onboarding with custom connected account... But we saw how to use the product for the purpose of our luxury goods marketplace. You can look up the github repository for [this part](https://github.com/generalui/redwood-stripe/tree/main/part4)
 
-In the next [part](../part5/readme.md) we will ...
+In the next [part](../part5/readme.md) we will see how we can build a quick dashboard with our sellers, the subscriptions and the products they sold and the money they made us.
