@@ -355,13 +355,16 @@ yarn rw g sdl purchases
 ## Create my products page
 
 First we want to be able to query a user's purchases. In `purchases.sdl.ts`:
+
 ```graphql
 type Query {
   purchases(userId: Int): [Purchase!]! @requireAuth
   purchase(id: Int!): Purchase @requireAuth
 }
 ```
+
 And now we can check for this `userId` in `servcies/purchases/purchases.ts`:
+
 ```ts
 export const purchases: QueryResolvers['purchases'] = ({
   userId,
@@ -382,17 +385,27 @@ yarn rw g cell MyPurchases
 
 We will list purchases from the current user in this page
 Add the page in the right section of our `Routes.tsx`:
+
 ```tsx
-  <Private unauthenticated="home">
-    <Route path="/pick-subscription" page={PickSubscriptionPage} name="pickSubscription" />
-    <Route path="/sell-stuff" page={SellStuffPage} name="sellStuff" />
-    <Route path="/manage-subscription" page={ManageSubscriptionPage} name="manageSubscription" />
-    <Route path="/create-product" page={CreateProductPage} name="createProduct" />
-    <Route path="/my-purchases" page={MyPurchasesPage} name="myPurchases" />
-  </Private>
+<Private unauthenticated="home">
+  <Route
+    path="/pick-subscription"
+    page={PickSubscriptionPage}
+    name="pickSubscription"
+  />
+  <Route path="/sell-stuff" page={SellStuffPage} name="sellStuff" />
+  <Route
+    path="/manage-subscription"
+    page={ManageSubscriptionPage}
+    name="manageSubscription"
+  />
+  <Route path="/create-product" page={CreateProductPage} name="createProduct" />
+  <Route path="/my-purchases" page={MyPurchasesPage} name="myPurchases" />
+</Private>
 ```
 
 `MyPurchasesPage.tsx` is just a wrapper for `MyPurchasesCell.tsx`
+
 ```tsx
 import { useAuth } from '@redwoodjs/auth'
 import { MetaTags } from '@redwoodjs/web'
@@ -406,7 +419,7 @@ const MyPurchasesPage = () => {
       <h1>My Products</h1>
       {currentUser ? (
         <>
-          <MyPurchasesCell />
+          <MyPurchasesCell userId={currentUser.id} />
         </>
       ) : (
         'Login/Signup to access your purchases'

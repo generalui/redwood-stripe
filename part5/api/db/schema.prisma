@@ -1,0 +1,56 @@
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = "native"
+}
+
+enum PaymentStatus {
+  init
+  success
+  failed
+}
+
+model User {
+  id                   Int            @id @default(autoincrement())
+  email                String         @unique
+  hashedPassword       String
+  salt                 String
+  roles                String[]
+  stripeClientSecret   String?
+  resetToken           String?
+  resetTokenExpiresAt  DateTime?
+  subscriptionId       String?
+  subscriptionName     String?
+  stripeCustomerId     String?
+  stripeAccountId      String?
+  stripeOnboardingDone Boolean        @default(false)
+  subscriptionStatus   PaymentStatus?
+  products             Product[]
+  purchases            Purchase[]
+}
+
+model Product {
+  id          Int        @id @default(autoincrement())
+  price       Float
+  name        String
+  category    String
+  description String?
+  imageUrl    String?
+  user        User       @relation(fields: [userId], references: [id])
+  userId      Int
+  purchases   Purchase[]
+}
+
+model Purchase {
+  id           Int           @id @default(autoincrement())
+  user         User          @relation(fields: [userId], references: [id])
+  userId       Int
+  product      Product       @relation(fields: [productId], references: [id])
+  productId    Int
+  clientSecret String?
+  status       PaymentStatus
+}

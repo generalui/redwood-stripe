@@ -10,7 +10,7 @@ const MyPurchasesPage = () => {
       <h1>My Products</h1>
       {currentUser ? (
         <>
-          <MyPurchasesCell />
+          <MyPurchasesCell userId={currentUser.id} />
         </>
       ) : (
         'Login/Signup to access your purchases'

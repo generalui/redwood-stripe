@@ -1,4 +1,553 @@
-todo
+# Manage subscriptions and payments
+
+## Create an admin section
+
+First let's create a user with an admin role. Signup as a regular user and in the db, add the admin role using your sql client (I am using table plus but of course there are plenty of options out there). The SQL command is:
+```sql
+UPDATE "public"."User" SET "roles" = '{admin}' WHERE "id" = 9;
+```
+If your admin user ID is 9
+
+Now we can create the actual admin page:
+```
+yarn rw g page admin
+```
+
+## List payments service
+
+To retrieve all the payments from Stripe, we will use the [list all charges](https://stripe.com/docs/api/charges/list) endpoint.
+We can test it to see what it returns first:
+```
+curl -G https://api.stripe.com/v1/charges \
+  -u sk_test_XXXXXXXXXXXXX \
+  -d limit=3
+```
+
+We can create a new sdl file for payments. We're not going to use the redwood sdl generator this time, because we don't have a corresponding model for payments in our schema.prisma file. So we will create this service "manually".
+
+Create `api/src/graphql/payments.sdl.ts` and add this code:
+```ts
+export const schema = gql`
+  type Payment {
+    stripeId: String!
+    fromEmail: String!
+    amount: Int!
+    status: String!
+    receiptUrl: String!
+  }
+
+  type Query {
+    payments: [Payment!]! @requireAuth
+  }
+`
+```
+
+Create `api/src/services/payments/payments.ts` and add this code:
+```ts
+import { stripe } from 'src/lib/stripe'
+import type { QueryResolvers } from 'types/graphql'
+
+export const payments: QueryResolvers['payments'] = async () => {
+  const charges = await stripe.charges.list()
+  return charges.data.map((charge) => ({
+    stripeId: charge.id,
+    fromEmail: charge.billing_details.name,
+    amount: charge.amount,
+    status: charge.status,
+    receiptUrl: charge.receipt_url,
+  }))
+}
+```
+
+You can test this by replacing `@requireAuth` with `@skipAuth` in `payments.sdl.ts` and executing this command:
+```
+curl --location --request POST 'http://localhost:8910/.redwood/functions/graphql' \
+--header 'Content-Type: application/json' \
+--data-raw '{"query":"query { payments {stripeId fromEmail amount status receiptUrl}}","variables":{}}'
+```
+
+## List payment frontend
+
+In our new admin page we will create a Cell whose job will be to list the payments.
+```
+yarn rw g cell listPayments --list
+```
+
+Copy this code in `web/src/components/ListPaymentsCell/ListPaymentsCell.tsx`:
+```tsx
+import type { ListPaymentsQuery } from 'types/graphql'
+import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
+
+export const QUERY = gql`
+  query ListPaymentsQuery {
+    payments {
+      stripeId
+      fromEmail
+      amount
+      status
+      receiptUrl
+    }
+  }
+`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({ error }: CellFailureProps) => (
+  <div style={{ color: 'red' }}>Error: {error.message}</div>
+)
+
+export const Success = ({ payments }: CellSuccessProps<ListPaymentsQuery>) => {
+  return (
+    <>
+      <table>
+        <thead>
+          <tr>
+            <th>id</th>
+            <th>email</th>
+            <th>amount</th>
+            <th>status</th>
+            <th>receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {payments.map((item) => {
+            return (
+              <tr key={item.stripeId}>
+                <td>{item.stripeId}</td>
+                <td>{item.fromEmail}</td>
+                <td>{item.amount}</td>
+                <td>{item.status}</td>
+                <td>
+                  <a href={item.receiptUrl} target="_blank" rel="noreferrer">
+                    open
+                  </a>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </>
+  )
+}
+```
+
+Now we can update `web/src/pages/AdminPage/AdminPage.tsx`:
+```tsx
+import { MetaTags } from '@redwoodjs/web'
+import ListPaymentsCell from 'src/components/ListPaymentsCell'
+
+const AdminPage = () => {
+  return (
+    <>
+      <MetaTags title="Admin" description="Admin page" />
+
+      <h1>AdminPage</h1>
+      <ListPaymentsCell />
+    </>
+  )
+}
+
+export default AdminPage
+```
+
+## Add recipient and payment type
+
+Some problems with this first list:
+- Subscriptions are indistinguishable from purchase
+- Purchases are not linked to the connected account
+
+We are not creating the payment for the subscription directly, it is created when we call `stripe.subscriptions.create` and it gets created with a description that says 'Subscription creation'. But we do create the payment intents for purchases: We can use the `metadata` optional field in the `stripe.paymentIntents.create` call to set the type of purchase and add the connected account id and email.
+
+In `api/src/functions/createPaymentIntent/createPaymentIntent.ts` replace the `stripe.paymentIntents.create` call with:
+```ts
+const paymentIntent = await stripe.paymentIntents.create({
+  amount: product.price,
+  currency: 'usd',
+  customer: user.stripeCustomerId,
+  automatic_payment_methods: {
+    enabled: true,
+  },
+  application_fee_amount: product.price * +process.env.PLATFORM_FEE,
+  transfer_data: {
+    destination: product.user.stripeAccountId,
+  },
+  metadata: {
+    type: 'purchase',
+    connectedAccountEmail: product.user.email,
+    connectedAccountId: product.user.id,
+  },
+})
+```
+
+Let's now add the type and the connected account to `payment.sdl.ts`:
+```graphql
+type Payment {
+  stripeId: String!
+  fromEmail: String!
+  amount: Int!
+  status: String!
+  receiptUrl: String!
+  type: String!
+  connectedAccountEmail: String
+  connectedAccountId: Int
+}
+```
+
+And to `api/src/services/payments/payments.ts`:
+```ts
+export const payments: QueryResolvers['payments'] = async () => {
+  const charges = await stripe.charges.list()
+  return charges.data.map((charge) => ({
+    stripeId: charge.id,
+    fromEmail: charge.billing_details.name,
+    amount: charge.amount,
+    status: charge.status,
+    receiptUrl: charge.receipt_url,
+    c
+    connectedAccountId: +charge.metadata?.connectedAccountId || undefined,
+    type:
+      charge.metadata?.type ||
+      (charge.description === 'Subscription creation'
+        ? 'subscription'
+        : 'unknown'),
+  }))
+}
+```
+
+In the frontend, we can now add 2 columns to our table in `web/src/components/ListPaymentsCell/ListPaymentsCell.tsx`:
+```tsx
+import type { ListPaymentsQuery } from 'types/graphql'
+import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
+
+export const QUERY = gql`
+  query ListPaymentsQuery {
+    payments {
+      stripeId
+      fromEmail
+      amount
+      status
+      receiptUrl
+      type
+      connectedAccountEmail
+      connectedAccountId
+    }
+  }
+`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({ error }: CellFailureProps) => (
+  <div style={{ color: 'red' }}>Error: {error.message}</div>
+)
+
+export const Success = ({ payments }: CellSuccessProps<ListPaymentsQuery>) => {
+  return (
+    <>
+      <table>
+        <thead>
+          <tr>
+            <th>id</th>
+            <th>type</th>
+            <th>email</th>
+            <th>amount</th>
+            <th>status</th>
+            <th>receipt</th>
+            <th>recipient</th>
+          </tr>
+        </thead>
+        <tbody>
+          {payments.map((item) => {
+            return (
+              <tr key={item.stripeId}>
+                <td>{item.stripeId}</td>
+                <td>{item.type}</td>
+                <td>{item.fromEmail}</td>
+                <td>{item.amount}</td>
+                <td>{item.status}</td>
+                <td>
+                  <a href={item.receiptUrl} target="_blank" rel="noreferrer">
+                    open
+                  </a>
+                </td>
+                <td>
+                  {!!item.connectedAccountEmail && (
+                    <div>{item.connectedAccountEmail}</div>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </>
+  )
+}
+```
+
+## Retrieve sellers' payouts
+
+We want to use `stripe.charges.list` to list the charges for a connected account (see [here](https://stripe.com/docs/api/charges/list)). Unfortunately, there is no connected account param that we can query against. We need to use the `transfer_group` parameter. But this needs to be added on the payment intent first.
+
+Open `api/src/functions/createPaymentIntent/createPaymentIntent.ts` and modify the `paymentIntent` creation like this:
+```ts
+const paymentIntent = await stripe.paymentIntents.create({
+  amount: product.price,
+  currency: 'usd',
+  customer: user.stripeCustomerId,
+  automatic_payment_methods: {
+    enabled: true,
+  },
+  application_fee_amount: product.price * +process.env.PLATFORM_FEE,
+  transfer_data: {
+    destination: product.user.stripeAccountId,
+  },
+  metadata: {
+    type: 'purchase',
+    connectedAccountEmail: product.user.email,
+    connectedAccountId: product.user.id,
+  },
+  transfer_group: `${product.user.id}`,
+})
+```
+
+Now that the `transfer_group` is the `userId` we can query the charges for this `transfer_group`. We need to now modify our payments query.
+First, add an optional `userId` param to the query in `payments.sdl.ts`:
+```graphql
+payments(userId: Int): [Payment!]! @requireAuth
+```
+Then modify the implementation of the service in `api/src/services/payments/payments.ts`:
+```ts
+import { stripe } from 'src/lib/stripe'
+import type { QueryResolvers } from 'types/graphql'
+
+export const payments: QueryResolvers['payments'] = async ({
+  userId,
+}: {
+  userId?: number
+}) => {
+  const params = userId ? { transfer_group: `${userId}` } : {}
+  const charges = await stripe.charges.list(params)
+  return charges.data.map((charge) => ({
+    stripeId: charge.id,
+    fromEmail: charge.billing_details.name,
+    amount: charge.amount,
+    status: charge.status,
+    receiptUrl: charge.receipt_url,
+    connectedAccountEmail: charge.metadata?.connectedAccountEmail,
+    connectedAccountId: +charge.metadata?.connectedAccountId || undefined,
+    type:
+      charge.metadata?.type ||
+      (charge.description === 'Subscription creation'
+        ? 'subscription'
+        : 'unknown'),
+  }))
+}
+```
+
+## Display sellers' payouts
+
+Let's create a seller page where we will see the purchase linked to this seller and be able to transfer the funds from the connected account to the seller's bank account.
+
+```
+yarn rw g page SellerAdmin
+yarn rw g cell Sales --list
+```
+
+The cell's query is almost identical to `ListPaymentsCell.tsx`:
+```tsx
+export const QUERY = gql`
+  query ListPaymentsQuery($userId: Int) {
+    payments(userId: $userId) {
+      stripeId
+      fromEmail
+      amount
+      status
+      receiptUrl
+      type
+      connectedAccountEmail
+      connectedAccountId
+    }
+  }
+`
+```
+
+Copy this code for `SellerAdminPage.tsx`:
+```tsx
+import { useParams } from '@redwoodjs/router'
+import { MetaTags } from '@redwoodjs/web'
+import SalesCell from 'src/components/SalesCell'
+
+const SellerAdminPage = () => {
+  const { userId } = useParams()
+  return (
+    <>
+      <MetaTags title="Seller Admin" description="Seller Admin page" />
+
+      <h1>Sales of seller id={userId}</h1>
+      {userId && <SalesCell userId={+userId} />}
+    </>
+  )
+}
+
+export default SellerAdminPage
+```
+
+And `SalesCell.tsx` in its simplest form can look like this:
+```tsx
+import type { ListPaymentsQuery } from 'types/graphql'
+import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
+
+export const QUERY = gql`
+  query ListPaymentsQuery($userId: Int) {
+    payments(userId: $userId) {
+      stripeId
+      fromEmail
+      amount
+      status
+      receiptUrl
+      type
+      connectedAccountEmail
+      connectedAccountId
+    }
+  }
+`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({ error }: CellFailureProps) => (
+  <div style={{ color: 'red' }}>Error: {error.message}</div>
+)
+
+export const Success = ({ payments }: CellSuccessProps<ListPaymentsQuery>) => {
+  return (
+    <>
+      <table>
+        <thead>
+          <tr>
+            <th>id</th>
+            <th>type</th>
+            <th>email</th>
+            <th>amount</th>
+            <th>status</th>
+            <th>receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {payments.map((item) => {
+            return (
+              <tr key={item.stripeId}>
+                <td>{item.stripeId}</td>
+                <td>{item.type}</td>
+                <td>{item.fromEmail}</td>
+                <td>{item.amount}</td>
+                <td>{item.status}</td>
+                <td>
+                  <a href={item.receiptUrl} target="_blank" rel="noreferrer">
+                    open
+                  </a>
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </>
+  )
+}
+```
+
+We can link those together now by adding the link in `ListPaymentsCell.tsx`:
+
+
+## Seller list page
+
+Right now the admin can only access the list of sellers from the the list of payments. It would certainly be interesting to get a list of all the sellers directly.
+
+On the backend, create a new query in `user.sdl.ts`:
+```graphql
+type Query {
+  users: [User!]! @requireAuth
+  sellers: [User!]! @requireAuth
+  user(id: Int!): User @requireAuth
+}
+```
+
+in `api/src/services/users/users.ts`:
+```ts
+
+export const sellers: QueryResolvers['users'] = () => {
+  return db.user.findMany({ where: { roles: { has: 'seller' } } })
+}
+```
+
+We can now create a new page and add it to our main layout:
+```
+yarn rw g page SellerListAdmin
+yarn rw g cell Sellers --list
+```
+
+With `SellerListAdminPage.tsx` simply rendering the cell:
+```tsx
+import { MetaTags } from '@redwoodjs/web'
+import SellersCell from 'src/components/SellersCell'
+
+const SellerListAdminPage = () => {
+  return (
+    <>
+      <MetaTags title="Seller List" description="Seller List page" />
+
+      <h1>Seller Page</h1>
+      <SellersCell />
+    </>
+  )
+}
+
+export default SellerListAdminPage
+```
+
+And with this code in `SellersCell.tsx`:
+```tsx
+import type { SellersQuery } from 'types/graphql'
+import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
+import { Link, routes } from '@redwoodjs/router'
+
+export const QUERY = gql`
+  query SellersQuery {
+    sellers {
+      id
+      email
+    }
+  }
+`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({ error }: CellFailureProps) => (
+  <div style={{ color: 'red' }}>Error: {error.message}</div>
+)
+
+export const Success = ({ sellers }: CellSuccessProps<SellersQuery>) => (
+  <ul>
+    {sellers.map((item) => (
+      <li key={item.id}>
+        <Link to={routes.sellerAdmin({ userId: `${item.id}` })}>
+          {item.email}
+        </Link>
+      </li>
+    ))}
+  </ul>
+)
+```
+
 
 # We're done
 
