@@ -548,9 +548,82 @@ export const Success = ({ sellers }: CellSuccessProps<SellersQuery>) => (
 )
 ```
 
+## Add an admin layout
+
+That's where we will access the list of sellers
+```
+yarn rw g layout AdminLayout
+```
+
+With this code:
+```tsx
+import { useAuth } from '@redwoodjs/auth'
+import { Link, navigate, routes } from '@redwoodjs/router'
+import { useEffect, useState } from 'react'
+
+type MainLayoutProps = {
+  children?: React.ReactNode
+}
+
+const AdminLayout = ({ children }: MainLayoutProps) => {
+  const { currentUser, logOut } = useAuth()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.roles.includes('admin')) {
+        setIsAdmin(true)
+      } else {
+        navigate(routes.home())
+      }
+    }
+  }, [currentUser])
+  return (
+    <>
+      <nav>
+        <h3>Menu</h3>
+        <ul>
+          <li>
+            <Link to={routes.home()}>Home</Link>
+          </li>
+          {isAdmin && (
+            <>
+              <li>
+                <button onClick={logOut}>Logout</button>
+              </li>
+              <li>
+                <Link to={routes.admin()}>Purchases</Link>
+              </li>
+              <li>
+                <Link to={routes.sellerListAdmin()}>Sellers</Link>
+              </li>
+            </>
+          )}
+        </ul>
+      </nav>
+      {children}
+    </>
+  )
+}
+
+export default AdminLayout
+```
+
+And modify the admin section in `Routes.tsx` like this:
+```tsx
+import AdminLayout from './layouts/AdminLayout/AdminLayout'
+...
+<Set wrap={AdminLayout}>
+  <Private unauthenticated="home" roles="admin">
+    <Route path="/seller-list-admin" page={SellerListAdminPage} name="sellerListAdmin" />
+    <Route path="/seller-admin/{userId:number}" page={SellerAdminPage} name="sellerAdmin" />
+    <Route path="/admin" page={AdminPage} name="admin" />
+  </Private>
+</Set>
+```
 
 # We're done
 
-Congrats! You're probably now sipping a margharita in the middle of your infinity pool on your new island in the Pacific, big enough to welcome a successful edition of the [Fyre festival](https://en.wikipedia.org/wiki/Fyre_Festival), and you're wondering, "what kind of products did we even sell?"
+Congrats! You're probably now sipping a margarita in the middle of your infinity pool on your new island in the Pacific, big enough to welcome a successful edition of the [Fyre festival](https://en.wikipedia.org/wiki/Fyre_Festival), and you're wondering, "what kind of products did we even sell?"
 
 I hope you enjoyed the tutorial. Or if you skipped to the end to check out where the repo with all the code [here it is](https://github.com/generalui/redwood-stripe.git)
