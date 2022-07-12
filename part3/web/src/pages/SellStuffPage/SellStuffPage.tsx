@@ -9,9 +9,13 @@ const SellStuffPage = () => {
     <>
       <MetaTags title="Sell Stuff" description="Sell Stuff page" />
 
-      <h1>Sell Stuff</h1>
       {currentUser && <ProductsCell userId={currentUser.id} />}
-      <Link to={routes.createProduct()}>Add Product</Link>
+      <Link
+        to={routes.createProduct()}
+        className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold mt-5 inline-block"
+      >
+        Add Product
+      </Link>
     </>
   )
 }

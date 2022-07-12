@@ -39,7 +39,6 @@ export type Subscription = {
   id: Scalars['ID'];
   name: Scalars['String'];
   price: Scalars['Int'];
-  priceId: Scalars['String'];
 };
 
 export type SubscriptionsQueryVariables = Exact<{ [key: string]: never; }>;

@@ -31,18 +31,26 @@ const ManageSubscriptionPage = () => {
         title="Manage My Subscription"
         description="Manage Subscription"
       />
-      <h1>Manage My Subscription</h1>
-      <p>Current subscription: {currentUser?.subscriptionName}</p>
-      <div>
-        Options:
+      <div className="w-56 mx-auto">
+        <p className="text-slate-500 text-center">
+          Current subscription: {currentUser?.subscriptionName}
+        </p>
         <ul>
           <li>
-            <button onClick={() => navigate(routes.pickSubscription())}>
+            <button
+              onClick={() => navigate(routes.pickSubscription())}
+              className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold w-56 mt-5"
+            >
               Change subscription
             </button>
           </li>
           <li>
-            <button onClick={cancelSubscription}>Cancel subscription</button>
+            <button
+              onClick={cancelSubscription}
+              className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold w-56 mt-5"
+            >
+              Cancel subscription
+            </button>
           </li>
         </ul>
       </div>

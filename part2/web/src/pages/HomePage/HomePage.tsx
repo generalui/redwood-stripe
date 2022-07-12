@@ -13,10 +13,13 @@ const HomePage = () => {
     <>
       <MetaTags title="Home" description="Home page" />
 
-      <h1>HomePage</h1>
       <Form>
-        <SelectField name="category" onChange={onChangeCategory}>
-          <option value="">-</option>
+        <SelectField
+          name="category"
+          onChange={onChangeCategory}
+          className="mb-4 bg-slate-100 p-2"
+        >
+          <option value="">No filters</option>
           {CATEGORIES.map((category) => (
             <option key={category} value={category}>
               {category}

@@ -15,9 +15,11 @@ const PURCHASE_STATUS_QUERY = gql`
 const Checkout = ({
   clientSecret,
   purchaseId,
+  onClose,
 }: {
   clientSecret: string
   purchaseId: number
+  onClose: () => void
 }) => {
   const { currentUser } = useAuth()
   const [message, setMessage] = useState('')
@@ -29,6 +31,7 @@ const Checkout = ({
 
   const handleSubmit = async (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault()
+    setMessage('Submitting payment...')
     const cardElement = elements.getElement(CardElement)
     const { error, paymentIntent } = await stripe.confirmCardPayment(
       clientSecret,
@@ -46,7 +49,7 @@ const Checkout = ({
       return
     }
     if (paymentIntent.status === 'succeeded') {
-      setMessage('waiting for confirmation...')
+      setMessage('Waiting for confirmation...')
       checkForConfirmation()
     }
   }
@@ -69,17 +72,35 @@ const Checkout = ({
   }, [data])
 
   return (
-    <form onSubmit={handleSubmit}>
-      <CardElement />
-      <button>Pay now</button>
-      <div>
-        {loading
-          ? 'checking status'
-          : error
-          ? 'Oops something happened'
-          : message}
+    <div className="absolute left-1/2 top-20 -ml-48 p-5 w-96 shadow-lg rounded-md bg-slate-200 text-slate-500">
+      <div className="font-bold text-sm uppercase tracking-wide mb-4 pb-2 text-center border-b border-slate-300">
+        Checkout
       </div>
-    </form>
+      <form onSubmit={handleSubmit}>
+        <CardElement />
+        <div className="text-slate-400 my-2 italic">
+          {loading
+            ? 'checking status'
+            : error
+            ? 'Oops something happened'
+            : message}
+        </div>
+        <div className="overflow-hidden">
+          <button
+            className="mt-4 float-left py-2 px-4 text-indigo-400 rounded-md font-bold"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="mt-4 float-right py-2 px-4 bg-indigo-400 rounded-md text-white font-bold"
+          >
+            Pay now
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
 

@@ -28,7 +28,14 @@ export const Success = ({
   IsSubscriptionValidQueryVariables
 >) => {
   if (isSubscriptionValid) {
-    return <Link to={routes.createProduct()}>Add Product</Link>
+    return (
+      <Link
+        to={routes.createProduct()}
+        className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold mt-5 inline-block"
+      >
+        Add Product
+      </Link>
+    )
   } else {
     return null
   }

@@ -23,7 +23,10 @@ export const Success = ({ sellers }: CellSuccessProps<SellersQuery>) => (
   <ul>
     {sellers.map((item) => (
       <li key={item.id}>
-        <Link to={routes.sellerAdmin({ userId: `${item.id}` })}>
+        <Link
+          className="text-blue-800 underline my-3"
+          to={routes.sellerAdmin({ userId: `${item.id}` })}
+        >
           {item.email}
         </Link>
       </li>

@@ -29,7 +29,9 @@ export const Success = ({
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
   const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
+  const [loading, setIsLoading] = useState(false)
   const createSubscription = async (subscription: Subscription) => {
+    setIsLoading(true)
     const response = await fetch(`${global.RWJS_API_URL}/createSubscription`, {
       method: 'POST',
       headers: {
@@ -43,22 +45,44 @@ export const Success = ({
     const { clientSecret } = await response.json()
     await reauthenticate()
     setClientSecret(clientSecret)
+    setIsLoading(false)
   }
+  const isCurrentSubscription = (subscriptionName: string) =>
+    currentUser?.subscriptionName === subscriptionName &&
+    currentUser?.subscriptionStatus === 'success'
   return (
-    <>
-      <h1>Pick a subscription</h1>
-      <p>Logged in as {currentUser.email}</p>
+    <div className="w-80 mx-auto">
+      <p className="text-slate-500 text-center">Pick a subscription</p>
       <ul>
         {subscriptions.map((item) => {
           return (
             <li key={item.id}>
-              {item.name} - {item.description} - <b>${item.price / 100}/mo</b>
-              <button onClick={() => createSubscription(item)}>Pick</button>
+              <button
+                onClick={() => createSubscription(item)}
+                disabled={isCurrentSubscription(item.name)}
+                className={`py-2 px-4 ${
+                  isCurrentSubscription(item.name)
+                    ? 'bg-slate-200'
+                    : 'bg-indigo-400'
+                } rounded-md text-white font-bold w-80 mt-8`}
+              >
+                {item.name} - {item.description} - <b>${item.price / 100}/mo</b>
+              </button>
             </li>
           )
         })}
       </ul>
-      {clientSecret && <Subscribe clientSecret={clientSecret} />}
-    </>
+      {loading && (
+        <div className="text-slate-400 italic text-center mt-5">
+          Creating payment intent...
+        </div>
+      )}
+      {clientSecret && (
+        <Subscribe
+          clientSecret={clientSecret}
+          onClose={() => setClientSecret(null)}
+        />
+      )}
+    </div>
   )
 }

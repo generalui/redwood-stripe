@@ -16,12 +16,15 @@ const HomePage = () => {
   return (
     <>
       <MetaTags title="Home" description="Home page" />
-      <h1>HomePage</h1>
       {currentUser ? (
         <>
           <Form>
-            <SelectField name="category" onChange={onChangeCategory}>
-              <option value="">-</option>
+            <SelectField
+              name="category"
+              onChange={onChangeCategory}
+              className="mb-4 bg-slate-100 p-2"
+            >
+              <option value="">No filters</option>
               {CATEGORIES.map((category) => (
                 <option key={category} value={category}>
                   {category}
@@ -32,7 +35,7 @@ const HomePage = () => {
           <ProductsCell category={category || undefined} />
         </>
       ) : (
-        'Login/Signup to access products'
+        <div className="text-xl my-10 text-slate-400 text-center">Welcome!</div>
       )}
     </>
   )
@@ -195,8 +198,13 @@ curl --location --request POST 'http://localhost:8910/.redwood/functions/createP
 Let's add a column to the product list on the homepage to add a buy button. For that go to `ProductsCell.tsx` and add this column to the table that we created in [part 2](../part2/readme.md)
 
 ```tsx
-<td>
-  <button onClick={() => buy(item.id)}>Buy</button>
+<td className="p-4">
+  <button
+    className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold"
+    onClick={() => buy(item.id)}
+  >
+    Buy
+  </button>
 </td>
 ```
 
@@ -206,7 +214,9 @@ Now let's implement the buy function. It will be very similar to the `createSubs
 const { currentUser } = useAuth()
 const [clientSecret, setClientSecret] = useState('')
 const [purchaseId, setPurchaseId] = useState<number | undefined>()
+const [productId, setProductId] = useState<number | undefined>()
 const buy = async (productId: number) => {
+  setProductId(productId)
   const response = await fetch(`${global.RWJS_API_URL}/createPaymentIntent`, {
     method: 'POST',
     headers: {
@@ -233,24 +243,39 @@ Here is the code to begin with
 
 ```tsx
 import { useAuth } from '@redwoodjs/auth'
-import { navigate, routes } from '@redwoodjs/router'
+import { useLazyQuery } from '@apollo/client'
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { useEffect, useState } from 'react'
+import { navigate, routes } from '@redwoodjs/router'
+
+const PURCHASE_STATUS_QUERY = gql`
+  query PurchasesStatusQuery($purchaseId: Int!) {
+    purchase(id: $purchaseId) {
+      status
+    }
+  }
+`
 
 const Checkout = ({
   clientSecret,
   purchaseId,
+  onClose,
 }: {
   clientSecret: string
   purchaseId: number
+  onClose: () => void
 }) => {
   const { currentUser } = useAuth()
   const [message, setMessage] = useState('')
   const stripe = useStripe()
   const elements = useElements()
+  const [getPurchaseStatus, { loading, error, data }] = useLazyQuery(
+    PURCHASE_STATUS_QUERY
+  )
 
   const handleSubmit = async (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault()
+    setMessage('Submitting payment...')
     const cardElement = elements.getElement(CardElement)
     const { error, paymentIntent } = await stripe.confirmCardPayment(
       clientSecret,
@@ -268,19 +293,58 @@ const Checkout = ({
       return
     }
     if (paymentIntent.status === 'succeeded') {
-      setMessage('waiting for confirmation...')
+      setMessage('Waiting for confirmation...')
       checkForConfirmation()
     }
   }
 
-  const checkForConfirmation = () => {}
+  const checkForConfirmation = () => {
+    getPurchaseStatus({ variables: { purchaseId } })
+  }
+
+  useEffect(() => {
+    if (data?.purchase) {
+      if (data.purchase.status === 'success') {
+        navigate(routes.myPurchases())
+        return
+      }
+      if (data.purchase.status !== 'failed') {
+        setTimeout(checkForConfirmation, 2000)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
 
   return (
-    <form onSubmit={handleSubmit}>
-      <CardElement />
-      <button>Pay now</button>
-      <div>{message}</div>
-    </form>
+    <div className="absolute left-1/2 top-20 -ml-48 p-5 w-96 shadow-lg rounded-md bg-slate-200 text-slate-500">
+      <div className="font-bold text-sm uppercase tracking-wide mb-4 pb-2 text-center border-b border-slate-300">
+        Checkout
+      </div>
+      <form onSubmit={handleSubmit}>
+        <CardElement />
+        <div className="text-slate-400 my-2 italic">
+          {loading
+            ? 'checking status'
+            : error
+            ? 'Oops something happened'
+            : message}
+        </div>
+        <div className="overflow-hidden">
+          <button
+            className="mt-4 float-left py-2 px-4 text-indigo-400 rounded-md font-bold"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="mt-4 float-right py-2 px-4 bg-indigo-400 rounded-md text-white font-bold"
+          >
+            Pay now
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
 
@@ -290,6 +354,86 @@ export default Checkout
 In this component, we are using stripe `CardElement` component to collect credit card information and we submit the information to stripe directly.
 
 Stripe will inform our backend (through webhooks) to tell us if the payment is confirmed. The frontend will need to wait for that confirmation. Hence the `checkForConfirmation` method that we'll implement later
+
+Now add the component to `ProductsCell.tsx`
+
+```tsx
+<>
+  <table className="border">
+    <thead className="text-left">
+      <tr
+        className="text-slate-500 uppercase tracking-widest"
+        style={{ fontSize: '11px' }}
+      >
+        <th className="text-center p-4">id</th>
+        <th className="p-4">name</th>
+        <th className="p-4">description</th>
+        <th className="p-4">category</th>
+        <th className="p-4">image</th>
+        <th className="p-4">price</th>
+        {!userId && (
+          <>
+            <th className="p-4"></th>
+            <th className="p-4"></th>
+          </>
+        )}
+      </tr>
+    </thead>
+    <tbody>
+      {products.map((item) => {
+        return (
+          <tr
+            key={item.id}
+            className={productId === item.id ? 'bg-slate-100' : ''}
+          >
+            <td className="p-4">{item.id}</td>
+            <td className="p-4">{item.name}</td>
+            <td className="p-4">{item.description}</td>
+            <td className="p-4">{item.category}</td>
+            <td className="p-4">
+              {item.imageUrl && (
+                <img width="100" src={item.imageUrl} alt={item.name} />
+              )}
+            </td>
+            <td className="p-4">
+              $
+              {item.price.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+              })}
+            </td>
+            {!userId && (
+              <>
+                <td className="p-4">
+                  {productId === item.id ? (
+                    'Buying...'
+                  ) : (
+                    <button
+                      className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold"
+                      onClick={() => buy(item.id)}
+                    >
+                      Buy
+                    </button>
+                  )}
+                </td>
+              </>
+            )}
+          </tr>
+        )
+      })}
+    </tbody>
+  </table>
+  {clientSecret && (
+    <Checkout
+      clientSecret={clientSecret}
+      purchaseId={purchaseId}
+      onClose={() => {
+        setClientSecret(null)
+        setProductId(null)
+      }}
+    />
+  )}
+</>
+```
 
 ## Register confirmation webhook
 
@@ -506,7 +650,11 @@ export const Product: ProductResolvers = {
     db.product.findUnique({ where: { id: root.id } }).user(),
   owned: async (_obj, { root }) => {
     const count = await db.purchase.count({
-      where: { userId: context.currentUser?.id, productId: root.id },
+      where: {
+        userId: context.currentUser?.id,
+        productId: root.id,
+        status: 'success',
+      },
     })
     return count > 0
   },
@@ -536,7 +684,7 @@ If `owned` is still not recognized by intellisense, run `yarn rw g types` and, i
 Lastly, we can add a column to our product table to tell if the product is owned by the current user or not:
 
 ```tsx
-<td>{item.owned && <span>You own it</span>}</td>
+<td className="p-4">{item.owned && <span>You own it</span>}</td>
 ```
 
 # End of part 3

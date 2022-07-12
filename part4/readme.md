@@ -11,7 +11,6 @@ There are 3 types of connected accounts (more details [here](https://stripe.com/
 
 For our purpose we will choose the **express** account type.
 
-
 ## Connect setup
 
 First you need to signup for Stripe Connect. Go to https://dashboard.stripe.com/connect/accounts/overview and click get started on the _Enable financial services and multi-party payments with Connect_ section
@@ -47,6 +46,7 @@ model User {
 Then `yarn rw prisma migrate dev` to add the field in the DB.
 
 The frontend will need to know about the current user's `stripeOnboardingDone` value, so we need to add it to the `getCurrentUser` method in `lib/auth.ts`:
+
 ```ts
 export const getCurrentUser = async (session) => {
   return await db.user.findUnique({
@@ -64,63 +64,62 @@ export const getCurrentUser = async (session) => {
 }
 ```
 
-
 We can now move to `functions/auth.ts` and add the logic to create connected accounts for sellers in the signupOptions':
 
 ```ts
-  const signupOptions = {
-    // Whatever you want to happen to your data on new user signup. Redwood will
-    // check for duplicate usernames before calling this handler. At a minimum
-    // you need to save the `username`, `hashedPassword` and `salt` to your
-    // user table. `userAttributes` contains any additional object members that
-    // were included in the object given to the `signUp()` function you got
-    // from `useAuth()`.
-    //
-    // If you want the user to be immediately logged in, return the user that
-    // was created.
-    //
-    // If this handler throws an error, it will be returned by the `signUp()`
-    // function in the form of: `{ error: 'Error message' }`.
-    //
-    // If this returns anything else, it will be returned by the
-    // `signUp()` function in the form of: `{ message: 'String here' }`.
-    handler: async ({
-      username,
-      hashedPassword,
-      salt,
-      userAttributes,
-    }: {
-      username: string
-      hashedPassword: string
-      salt: string
-      userAttributes: any
-    }) => {
-      let stripeAccountId: string | undefined = undefined
-      if (userAttributes.seller) {
-        const account = await stripe.accounts.create({
-          type: 'express',
-          email: username,
-        })
-        stripeAccountId = account.id
-      }
-      return db.user.create({
-        data: {
-          email: username,
-          hashedPassword,
-          salt,
-          stripeAccountId,
-          roles: userAttributes.seller ? ['seller'] : [],
-          // name: userAttributes.name
-        },
+const signupOptions = {
+  // Whatever you want to happen to your data on new user signup. Redwood will
+  // check for duplicate usernames before calling this handler. At a minimum
+  // you need to save the `username`, `hashedPassword` and `salt` to your
+  // user table. `userAttributes` contains any additional object members that
+  // were included in the object given to the `signUp()` function you got
+  // from `useAuth()`.
+  //
+  // If you want the user to be immediately logged in, return the user that
+  // was created.
+  //
+  // If this handler throws an error, it will be returned by the `signUp()`
+  // function in the form of: `{ error: 'Error message' }`.
+  //
+  // If this returns anything else, it will be returned by the
+  // `signUp()` function in the form of: `{ message: 'String here' }`.
+  handler: async ({
+    username,
+    hashedPassword,
+    salt,
+    userAttributes,
+  }: {
+    username: string
+    hashedPassword: string
+    salt: string
+    userAttributes: any
+  }) => {
+    let stripeAccountId: string | undefined = undefined
+    if (userAttributes.seller) {
+      const account = await stripe.accounts.create({
+        type: 'express',
+        email: username,
       })
-    },
+      stripeAccountId = account.id
+    }
+    return db.user.create({
+      data: {
+        email: username,
+        hashedPassword,
+        salt,
+        stripeAccountId,
+        roles: userAttributes.seller ? ['seller'] : [],
+        // name: userAttributes.name
+      },
+    })
+  },
 
-    errors: {
-      // `field` will be either "username" or "password"
-      fieldMissing: '${field} is required',
-      usernameTaken: 'Username `${username}` already in use',
-    },
-  }
+  errors: {
+    // `field` will be either "username" or "password"
+    fieldMissing: '${field} is required',
+    usernameTaken: 'Username `${username}` already in use',
+  },
+}
 ```
 
 ## Get connected account onboarding link
@@ -130,16 +129,19 @@ We now need to make sure that the seller goes through stripe onboarding for thei
 After signup, is the user is a seller, we will call the backend and request an `account link`. That is a single use Stripe url for the user to complete the onboarding process before getting redirected to our platform.
 
 We'll do that inside a function
+
 ```
 yarn rw g function createStripeAccountLink
 ```
 
 We will need to redirect to the website after stripe onboarding, so let's add an environment variable in our `.env` file for that:
+
 ```
 WEBSITE_URL=http://localhost:8910
 ```
 
 Here is the code for the function:
+
 ```ts
 import type { APIGatewayEvent } from 'aws-lambda'
 import { db } from 'src/lib/db'
@@ -199,6 +201,7 @@ The main part is the call to `stripe.accountLinks.create` to get the url for the
 
 For that we need to create method that calls our `createStripeAccountLink` function and do the redirect
 Let's create a `web/src/lib/stripeOnboarding.ts` file with this code:
+
 ```ts
 export async function stripeOnboarding(userId: number) {
   const response = await fetch(
@@ -219,6 +222,7 @@ export async function stripeOnboarding(userId: number) {
 ```
 
 Now upon signup if the user is a seller and has not completed the onboarding we can call this method. In `SignupPage.tsx`:
+
 ```tsx
 const SignupPage = () => {
   const { signUp, currentUser } = useAuth()
@@ -237,10 +241,10 @@ const SignupPage = () => {
   }, [currentUser])
 ```
 
-
 ## Flip the stripeOnboardingDone flag when onboarding is completed
 
 Stripe documentation talks about 2 main ways of checking if payouts are enabled for a connected account (see [here](https://stripe.com/docs/connect/collect-then-transfer-guide)):
+
 - Listening to account.updated webhooks
 - Calling the Accounts API and inspecting the returned object
 
@@ -290,7 +294,6 @@ const SellStuffPage = () => {
     <>
       <MetaTags title="Sell Stuff" description="Sell Stuff page" />
 
-      <h1>Sell Stuff</h1>
       {currentUser?.stripeOnboardingDone ? (
         <ProductsCell userId={currentUser.id} />
       ) : (
@@ -300,7 +303,12 @@ const SellStuffPage = () => {
           <button onClick={completeStripeOnboarding}>Stripe Onboarding</button>
         </div>
       )}
-      <Link to={routes.createProduct()}>Add Product</Link>
+      <Link
+        to={routes.createProduct()}
+        className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold mt-5 inline-block"
+      >
+        Add Product
+      </Link>
     </>
   )
 }
@@ -312,10 +320,13 @@ export default SellStuffPage
 
 We will use Stripe Connect's [destination charge](https://stripe.com/docs/connect/destination-charges) to pay the connected account and collect a fee
 First, let's set the fee we want to collect on every transaction in our marketplace. We can add this to our `.env` file:
+
 ```
 PLATFORM_FEE=0.05
 ```
+
 The only thing left to do is to modify the creation of the payment intent in `createPaymentIntent.ts`:
+
 ```ts
 const paymentIntent = await stripe.paymentIntents.create({
   amount: product.price,
@@ -352,13 +363,16 @@ You can now purchase one of the product and look on the [connect dashboard](http
 Before selling stuff on the platfrom we will check that the seller has a valid subscription. Ideally we would want to check the validity of the seller's subscription for every product regularly, but that's outside the scope of this tutorial.
 
 Let's add a `isSubscriptionValid` query to `subscriptions.sdl.ts`:
+
 ```graphql
-  type Query {
-    subscriptions: [Subscription!]! @skipAuth
-    isSubscriptionValid(userId: Int!): Boolean! @skipAuth
-  }
+type Query {
+  subscriptions: [Subscription!]! @skipAuth
+  isSubscriptionValid(userId: Int!): Boolean! @skipAuth
+}
 ```
+
 And in `services/subscriptions.ts`:
+
 ```ts
 export const isSubscriptionValid = async ({ userId }: { userId: number }) => {
   const user = await db.user.findUnique({ where: { id: userId } })
@@ -374,11 +388,13 @@ export const isSubscriptionValid = async ({ userId }: { userId: number }) => {
 
 We now want to render the `Add Product` button on `SellStuffPage` only if the subscription is valid.
 We need a new Cell to tell us if the subscription is valid prior to rendering the button
+
 ```
 yarn rw g cell AddProduct
 ```
 
 And add the following code to `AddProductCell.tsx`:
+
 ```tsx
 import { Link, routes } from '@redwoodjs/router'
 import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
@@ -418,6 +434,7 @@ export const Success = ({
 ```
 
 We can now edit `SellStuffPage.tsx`:
+
 ```tsx
 import { useAuth } from '@redwoodjs/auth'
 import { MetaTags } from '@redwoodjs/web'
@@ -435,7 +452,6 @@ const SellStuffPage = () => {
     <>
       <MetaTags title="Sell Stuff" description="Sell Stuff page" />
 
-      <h1>Sell Stuff</h1>
       {currentUser?.stripeOnboardingDone ? (
         <>
           <ProductsCell userId={currentUser.id} />
@@ -461,7 +477,6 @@ export default SellStuffPage
 
 You can now check that the `Add Product` button is rendering for a subscribed seller.
 To check with a cancelled subscription go to https://dashboard.stripe.com/test/subscriptions and cancel the subscription of your logged in seller, then refresh the sell stuff page and the `Add Product` has disappeared.
-
 
 # End of part 4
 

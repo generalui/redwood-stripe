@@ -45,20 +45,28 @@ export const Success = ({
     setClientSecret(clientSecret)
   }
   return (
-    <>
-      <h1>Pick a subscription</h1>
-      <p>Logged in as {currentUser.email}</p>
+    <div className="w-80 mx-auto">
+      <p className="text-slate-500 text-center">Pick a subscription</p>
       <ul>
         {subscriptions.map((item) => {
           return (
             <li key={item.id}>
-              {item.name} - {item.description} - <b>${item.price / 100}/mo</b>
-              <button onClick={() => createSubscription(item)}>Pick</button>
+              <button
+                onClick={() => createSubscription(item)}
+                disabled={currentUser?.subscriptionName === item.name}
+                className={`py-2 px-4 ${
+                  currentUser?.subscriptionName === item.name
+                    ? 'bg-slate-200'
+                    : 'bg-indigo-400'
+                } rounded-md text-white font-bold w-80 mt-8`}
+              >
+                {item.name} - {item.description} - <b>${item.price / 100}/mo</b>
+              </button>
             </li>
           )
         })}
       </ul>
       {clientSecret && <Subscribe clientSecret={clientSecret} />}
-    </>
+    </div>
   )
 }

@@ -14,12 +14,15 @@ const HomePage = () => {
   return (
     <>
       <MetaTags title="Home" description="Home page" />
-      <h1>HomePage</h1>
       {currentUser ? (
         <>
           <Form>
-            <SelectField name="category" onChange={onChangeCategory}>
-              <option value="">-</option>
+            <SelectField
+              name="category"
+              onChange={onChangeCategory}
+              className="mb-4 bg-slate-100 p-2"
+            >
+              <option value="">No filters</option>
               {CATEGORIES.map((category) => (
                 <option key={category} value={category}>
                   {category}
@@ -30,7 +33,7 @@ const HomePage = () => {
           <ProductsCell category={category || undefined} />
         </>
       ) : (
-        'Login/Signup to access products'
+        <div className="text-xl my-10 text-slate-400 text-center">Welcome!</div>
       )}
     </>
   )

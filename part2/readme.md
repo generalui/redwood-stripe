@@ -33,18 +33,26 @@ const ManageSubscriptionPage = () => {
         title="Manage My Subscription"
         description="Manage Subscription"
       />
-      <h1>Manage My Subscription</h1>
-      <p>Current subscription: {currentUser?.subscriptionName}</p>
-      <div>
-        Options:
+      <div className="w-56 mx-auto">
+        <p className="text-slate-500 text-center">
+          Current subscription: {currentUser?.subscriptionName}
+        </p>
         <ul>
           <li>
-            <button onClick={() => navigate(routes.pickSubscription())}>
+            <button
+              onClick={() => navigate(routes.pickSubscription())}
+              className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold w-56 mt-5"
+            >
               Change subscription
             </button>
           </li>
           <li>
-            <button onClick={cancelSubscription}>Cancel subscription</button>
+            <button
+              onClick={cancelSubscription}
+              className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold w-56 mt-5"
+            >
+              Cancel subscription
+            </button>
           </li>
         </ul>
       </div>
@@ -411,31 +419,39 @@ export const Failure = ({ error }: CellFailureProps) => (
 
 export const Success = ({ products }: CellSuccessProps<ProductsQuery>) => {
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>id</th>
-          <th>name</th>
-          <th>description</th>
-          <th>category</th>
-          <th>image</th>
-          <th>price</th>
+    <table className="border">
+      <thead className="text-left">
+        <tr
+          className="text-slate-500 uppercase tracking-widest"
+          style={{ fontSize: '11px' }}
+        >
+          <th className="text-center p-4">id</th>
+          <th className="p-4">name</th>
+          <th className="p-4">description</th>
+          <th className="p-4">category</th>
+          <th className="p-4">image</th>
+          <th className="p-4">price</th>
         </tr>
       </thead>
       <tbody>
         {products.map((item) => {
           return (
             <tr key={item.id}>
-              <td>{item.id}</td>
-              <td>{item.name}</td>
-              <td>{item.description}</td>
-              <td>{item.category}</td>
-              <td>
+              <td className="p-4">{item.id}</td>
+              <td className="p-4">{item.name}</td>
+              <td className="p-4">{item.description}</td>
+              <td className="p-4">{item.category}</td>
+              <td className="p-4">
                 {item.imageUrl && (
                   <img width="100" src={item.imageUrl} alt={item.name} />
                 )}
               </td>
-              <td>{item.price}</td>
+              <td className="p-4">
+                $
+                {item.price.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </td>
             </tr>
           )
         })}
@@ -461,9 +477,13 @@ const SellStuffPage = () => {
     <>
       <MetaTags title="Sell Stuff" description="Sell Stuff page" />
 
-      <h1>Sell Stuff</h1>
       {currentUser && <ProductsCell userId={currentUser.id} />}
-      <Link to={routes.createProduct()}>Add Product</Link>
+      <Link
+        to={routes.createProduct()}
+        className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold mt-5 inline-block"
+      >
+        Add Product
+      </Link>
     </>
   )
 }
@@ -491,10 +511,13 @@ const HomePage = () => {
     <>
       <MetaTags title="Home" description="Home page" />
 
-      <h1>HomePage</h1>
       <Form>
-        <SelectField name="category" onChange={onChangeCategory}>
-          <option value="">-</option>
+        <SelectField
+          name="category"
+          onChange={onChangeCategory}
+          className="mb-4 bg-slate-100 p-2"
+        >
+          <option value="">No filters</option>
           {CATEGORIES.map((category) => (
             <option key={category} value={category}>
               {category}

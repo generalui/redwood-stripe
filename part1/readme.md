@@ -44,6 +44,8 @@ And then `docker-compose up -d`
 
 Create the app
 `yarn create redwood-app --ts ./redwood-stripe`
+Add tailwind ui framework
+`yarn rw setup ui tailwindcss`
 
 That's it...
 
@@ -483,25 +485,35 @@ export const QUERY = gql`
 export const Success = ({
   subscriptions,
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
-  const { currentUser } = useAuth()
+  const { currentUser, reauthenticate } = useAuth()
+  const [clientSecret, setClientSecret] = useState('')
   const createSubscription = async (subscription: Subscription) => {
     // Get client secret from stripe...
   }
   return (
-    <>
-      <h1>Pick a subscription</h1>
-      <p>Logged in as {currentUser.email}</p>
+    <div className="w-80 mx-auto">
+      <p className="text-slate-500 text-center">Pick a subscription</p>
       <ul>
         {subscriptions.map((item) => {
           return (
             <li key={item.id}>
-              {item.name} - {item.description} - <b>${item.price / 100}/mo</b>
-              <button onClick={() => createSubscription(item)}>Pick</button>
+              <button
+                onClick={() => createSubscription(item)}
+                disabled={currentUser?.subscriptionName === item.name}
+                className={`py-2 px-4 ${
+                  currentUser?.subscriptionName === item.name
+                    ? 'bg-slate-200'
+                    : 'bg-indigo-400'
+                } rounded-md text-white font-bold w-80 mt-8`}
+              >
+                {item.name} - {item.description} - <b>${item.price / 100}/mo</b>
+              </button>
             </li>
           )
         })}
       </ul>
-    </>
+      {clientSecret && <Subscribe clientSecret={clientSecret} />}
+    </div>
   )
 }
 ```
@@ -517,6 +529,14 @@ yarn rw generate layout MainLayout
 And add this code in the body of the `MainLayout` component:
 
 ```tsx
+import { useAuth } from '@redwoodjs/auth'
+import { Link, navigate, routes, useLocation } from '@redwoodjs/router'
+import { useEffect } from 'react'
+
+type MainLayoutProps = {
+  children?: React.ReactNode
+}
+
 const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation()
   const { isAuthenticated, currentUser, logOut } = useAuth()
@@ -534,38 +554,47 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     }
   }, [currentUser, location])
   return (
-    <>
-      <nav>
-        <h3>Menu</h3>
-        <ul>
-          <li>
-            <Link to={routes.home()}>Home</Link>
-          </li>
-          {isAuthenticated ? (
-            <li>
-              <button onClick={logOut}>Logout</button>
-            </li>
-          ) : (
-            <>
-              <li>
-                <Link to={routes.login()}>Login</Link>
+    <div>
+      <div className="overflow-hidden p-2 bg-slate-100 flex justify-between text-slate-500">
+        <div className="font-bold italic">A Luxury Goods Marketplace</div>
+        <nav>
+          <ul className="flex gap-3 text-sm">
+            {isAuthenticated && (
+              <li className="text-slate-300 italic text-sm">
+                {currentUser.email}
               </li>
-              <li>
-                <Link to={routes.signup()}>Signup</Link>
-              </li>
-            </>
-          )}
-          {isAuthorizedSeller && (
+            )}
             <li>
-              <Link to={routes.sellStuff()}>Sell stuff</Link>
+              <Link to={routes.home()}>Home</Link>
             </li>
-          )}
-        </ul>
-      </nav>
-      {children}
-    </>
+            {isAuthenticated ? (
+              <li>
+                <button onClick={logOut}>Logout</button>
+              </li>
+            ) : (
+              <>
+                <li>
+                  <Link to={routes.login()}>Login</Link>
+                </li>
+                <li>
+                  <Link to={routes.signup()}>Signup</Link>
+                </li>
+              </>
+            )}
+            {isAuthorizedSeller && (
+              <li>
+                <Link to={routes.sellStuff()}>Sell stuff</Link>
+              </li>
+            )}
+          </ul>
+        </nav>
+      </div>
+      <div className="m-3">{children}</div>
+    </div>
   )
 }
+
+export default MainLayout
 ```
 
 Redwood's `useAuth` hook really comes in handy here and gives us everything we need to display information based on the `currentUser` and even gives us a simple function to call to log the user out.
@@ -779,21 +808,29 @@ export const Success = ({
     setClientSecret(clientSecret)
   }
   return (
-    <>
-      <h1>Pick a subscription</h1>
-      <p>Logged in as {currentUser.email}</p>
+    <div className="w-80 mx-auto">
+      <p className="text-slate-500 text-center">Pick a subscription</p>
       <ul>
         {subscriptions.map((item) => {
           return (
             <li key={item.id}>
-              {item.name} - {item.description} - <b>${item.price / 100}/mo</b>
-              <button onClick={() => createSubscription(item)}>Pick</button>
+              <button
+                onClick={() => createSubscription(item)}
+                disabled={currentUser?.subscriptionName === item.name}
+                className={`py-2 px-4 ${
+                  currentUser?.subscriptionName === item.name
+                    ? 'bg-slate-200'
+                    : 'bg-indigo-400'
+                } rounded-md text-white font-bold w-80 mt-8`}
+              >
+                {item.name} - {item.description} - <b>${item.price / 100}/mo</b>
+              </button>
             </li>
           )
         })}
       </ul>
       {clientSecret && <Subscribe clientSecret={clientSecret} />}
-    </>
+    </div>
   )
 }
 ```
@@ -814,13 +851,28 @@ That `Subscribe` component is a simple form whose content will be that CC fields
 import { useAuth } from '@redwoodjs/auth'
 import { navigate, routes } from '@redwoodjs/router'
 import { CardElement, useElements, useStripe } from '@stripe/react-stripe-js'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-const Subscribe = ({ clientSecret }: { clientSecret: string }) => {
+const Subscribe = ({
+  clientSecret,
+  onClose,
+}: {
+  clientSecret: string
+  onClose: () => void
+}) => {
   const { currentUser, reauthenticate } = useAuth()
+  const [paymentDone, setPaymentDone] = useState(false)
   const [message, setMessage] = useState('')
   const stripe = useStripe()
   const elements = useElements()
+  useEffect(() => {
+    if (!paymentDone) return
+    if (currentUser.subscriptionStatus === 'success') {
+      navigate(routes.home())
+    } else {
+      setTimeout(() => reauthenticate(), 1000)
+    }
+  }, [currentUser, reauthenticate, paymentDone])
 
   if (!stripe || !elements || !currentUser) {
     return null
@@ -828,6 +880,7 @@ const Subscribe = ({ clientSecret }: { clientSecret: string }) => {
 
   const handleSubmit = async (ev: React.FormEvent<HTMLFormElement>) => {
     ev.preventDefault()
+    setMessage('Submitting payment...')
     const cardElement = elements.getElement(CardElement)
     const { error, paymentIntent } = await stripe.confirmCardPayment(
       clientSecret,
@@ -851,11 +904,29 @@ const Subscribe = ({ clientSecret }: { clientSecret: string }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <CardElement />
-      <button>Subscribe</button>
-      <div>{message}</div>
-    </form>
+    <div className="absolute left-1/2 top-20 -ml-48 p-5 w-96 shadow-lg rounded-md bg-slate-200 text-slate-500">
+      <div className="font-bold text-sm uppercase tracking-wide mb-4 pb-2 text-center border-b border-slate-300">
+        Subscribe
+      </div>
+      <form onSubmit={handleSubmit}>
+        <CardElement />
+        {message && <div className="text-slate-400 my-2 italic">{message}</div>}
+        <div className="overflow-hidden">
+          <button
+            className="mt-4 float-left py-2 px-4 text-indigo-400 rounded-md font-bold"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="mt-4 float-right py-2 px-4 bg-indigo-400 rounded-md text-white font-bold"
+          >
+            Subscribe now
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
 
@@ -1031,7 +1102,7 @@ and at the end of the `handleSubmit` method:
 
 ```ts
 if (paymentIntent.status === 'succeeded') {
-  setMessage('waiting for confirmation...')
+  setMessage('Waiting for confirmation...')
   setPaymentDone(true)
   reauthenticate()
 }

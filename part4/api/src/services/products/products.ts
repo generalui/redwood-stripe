@@ -51,7 +51,11 @@ export const Product: ProductResolvers = {
     db.product.findUnique({ where: { id: root.id } }).user(),
   owned: async (_obj, { root }) => {
     const count = await db.purchase.count({
-      where: { userId: context.currentUser?.id, productId: root.id },
+      where: {
+        userId: context.currentUser?.id,
+        productId: root.id,
+        status: 'success',
+      },
     })
     return count > 0
   },

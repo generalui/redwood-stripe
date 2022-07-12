@@ -14,7 +14,6 @@ const SellStuffPage = () => {
     <>
       <MetaTags title="Sell Stuff" description="Sell Stuff page" />
 
-      <h1>Sell Stuff</h1>
       {currentUser?.stripeOnboardingDone ? (
         <>
           <ProductsCell userId={currentUser.id} />

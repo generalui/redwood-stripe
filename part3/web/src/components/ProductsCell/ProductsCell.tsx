@@ -26,11 +26,16 @@ export const Failure = ({ error }: CellFailureProps) => (
   <div style={{ color: 'red' }}>Error: {error.message}</div>
 )
 
-export const Success = ({ products }: CellSuccessProps<ProductsQuery>) => {
+export const Success = ({
+  products,
+  userId,
+}: CellSuccessProps<ProductsQuery>) => {
   const { currentUser } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
   const [purchaseId, setPurchaseId] = useState<number | undefined>()
+  const [productId, setProductId] = useState<number | undefined>()
   const buy = async (productId: number) => {
+    setProductId(productId)
     const response = await fetch(`${global.RWJS_API_URL}/createPaymentIntent`, {
       method: 'POST',
       headers: {
@@ -47,44 +52,81 @@ export const Success = ({ products }: CellSuccessProps<ProductsQuery>) => {
   }
   return (
     <>
-      <table>
-        <thead>
-          <tr>
-            <th>id</th>
-            <th>name</th>
-            <th>description</th>
-            <th>category</th>
-            <th>image</th>
-            <th>price</th>
-            <th></th>
-            <th></th>
+      <table className="border">
+        <thead className="text-left">
+          <tr
+            className="text-slate-500 uppercase tracking-widest"
+            style={{ fontSize: '11px' }}
+          >
+            <th className="text-center p-4">id</th>
+            <th className="p-4">name</th>
+            <th className="p-4">description</th>
+            <th className="p-4">category</th>
+            <th className="p-4">image</th>
+            <th className="p-4">price</th>
+            {!userId && (
+              <>
+                <th className="p-4"></th>
+                <th className="p-4"></th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody>
           {products.map((item) => {
             return (
-              <tr key={item.id}>
-                <td>{item.id}</td>
-                <td>{item.name}</td>
-                <td>{item.description}</td>
-                <td>{item.category}</td>
-                <td>
+              <tr
+                key={item.id}
+                className={productId === item.id ? 'bg-slate-100' : ''}
+              >
+                <td className="p-4">{item.id}</td>
+                <td className="p-4">{item.name}</td>
+                <td className="p-4">{item.description}</td>
+                <td className="p-4">{item.category}</td>
+                <td className="p-4">
                   {item.imageUrl && (
                     <img width="100" src={item.imageUrl} alt={item.name} />
                   )}
                 </td>
-                <td>{item.price}</td>
-                <td>
-                  <button onClick={() => buy(item.id)}>Buy</button>
+                <td className="p-4">
+                  $
+                  {item.price.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
                 </td>
-                <td>{item.owned && <span>You own it</span>}</td>
+                {!userId && (
+                  <>
+                    <td className="p-4">
+                      {productId === item.id ? (
+                        'Buying...'
+                      ) : (
+                        <button
+                          className="py-2 px-4 bg-indigo-400 rounded-md text-white font-bold"
+                          onClick={() => buy(item.id)}
+                        >
+                          Buy
+                        </button>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {item.owned && <span>You own it</span>}
+                    </td>
+                  </>
+                )}
               </tr>
             )
           })}
         </tbody>
       </table>
       {clientSecret && (
-        <Checkout clientSecret={clientSecret} purchaseId={purchaseId} />
+        <Checkout
+          clientSecret={clientSecret}
+          purchaseId={purchaseId}
+          onClose={() => {
+            setClientSecret(null)
+            setProductId(null)
+          }}
+        />
       )}
     </>
   )

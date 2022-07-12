@@ -23,36 +23,43 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     }
   }, [currentUser, location])
   return (
-    <>
-      <nav>
-        <h3>Menu</h3>
-        <ul>
-          <li>
-            <Link to={routes.home()}>Home</Link>
-          </li>
-          {isAuthenticated ? (
-            <li>
-              <button onClick={logOut}>Logout</button>
-            </li>
-          ) : (
-            <>
-              <li>
-                <Link to={routes.login()}>Login</Link>
+    <div>
+      <div className="overflow-hidden p-2 bg-slate-100 flex justify-between text-slate-500">
+        <div className="font-bold italic">A Luxury Goods Marketplace</div>
+        <nav>
+          <ul className="flex gap-3 text-sm">
+            {isAuthenticated && (
+              <li className="text-slate-300 italic text-sm">
+                {currentUser.email}
               </li>
-              <li>
-                <Link to={routes.signup()}>Signup</Link>
-              </li>
-            </>
-          )}
-          {isAuthorizedSeller && (
+            )}
             <li>
-              <Link to={routes.sellStuff()}>Sell stuff</Link>
+              <Link to={routes.home()}>Home</Link>
             </li>
-          )}
-        </ul>
-      </nav>
-      {children}
-    </>
+            {isAuthenticated ? (
+              <li>
+                <button onClick={logOut}>Logout</button>
+              </li>
+            ) : (
+              <>
+                <li>
+                  <Link to={routes.login()}>Login</Link>
+                </li>
+                <li>
+                  <Link to={routes.signup()}>Signup</Link>
+                </li>
+              </>
+            )}
+            {isAuthorizedSeller && (
+              <li>
+                <Link to={routes.sellStuff()}>Sell stuff</Link>
+              </li>
+            )}
+          </ul>
+        </nav>
+      </div>
+      <div className="m-3">{children}</div>
+    </div>
   )
 }
 

@@ -24,31 +24,36 @@ export const Failure = ({ error }: CellFailureProps) => (
 
 export const Success = ({ products }: CellSuccessProps<ProductsQuery>) => {
   return (
-    <table>
-      <thead>
+    <table className="border">
+      <thead className="text-left">
         <tr>
-          <th>id</th>
-          <th>name</th>
-          <th>description</th>
-          <th>category</th>
-          <th>image</th>
-          <th>price</th>
+          <th className="text-center p-4">id</th>
+          <th className="p-4">name</th>
+          <th className="p-4">description</th>
+          <th className="p-4">category</th>
+          <th className="p-4">image</th>
+          <th className="p-4">price</th>
         </tr>
       </thead>
       <tbody>
         {products.map((item) => {
           return (
             <tr key={item.id}>
-              <td>{item.id}</td>
-              <td>{item.name}</td>
-              <td>{item.description}</td>
-              <td>{item.category}</td>
-              <td>
+              <td className="p-4">{item.id}</td>
+              <td className="p-4">{item.name}</td>
+              <td className="p-4">{item.description}</td>
+              <td className="p-4">{item.category}</td>
+              <td className="p-4">
                 {item.imageUrl && (
                   <img width="100" src={item.imageUrl} alt={item.name} />
                 )}
               </td>
-              <td>{item.price}</td>
+              <td className="p-4">
+                $
+                {item.price.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </td>
             </tr>
           )
         })}

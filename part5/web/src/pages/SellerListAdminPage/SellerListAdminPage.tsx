@@ -6,7 +6,7 @@ const SellerListAdminPage = () => {
     <>
       <MetaTags title="Seller List" description="Seller List page" />
 
-      <h1>Seller Page</h1>
+      <h1 className="text-slate-500 mb-5 italic">All Sellers</h1>
       <SellersCell />
     </>
   )
