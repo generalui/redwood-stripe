@@ -109,7 +109,11 @@ export const Success = ({
                       )}
                     </td>
                     <td className="p-4">
-                      {item.owned && <span>You own it</span>}
+                      {item.owned && (
+                        <span className="font-bold italic text-slate-400">
+                          You own it
+                        </span>
+                      )}
                     </td>
                   </>
                 )}

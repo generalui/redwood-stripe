@@ -35,7 +35,7 @@ const CreateProductPage = () => {
     <>
       <MetaTags title="CreateProduct" description="CreateProduct page" />
       <div className="w-96 mx-auto">
-        <div className="text-slate-500 text-bold mb-4 text-lg text-center">
+        <div className="text-slate-500 font-bold mb-4 text-lg text-center">
           New Product
         </div>
         <Form onSubmit={onSubmit}>

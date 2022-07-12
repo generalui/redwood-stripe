@@ -684,7 +684,11 @@ If `owned` is still not recognized by intellisense, run `yarn rw g types` and, i
 Lastly, we can add a column to our product table to tell if the product is owned by the current user or not:
 
 ```tsx
-<td className="p-4">{item.owned && <span>You own it</span>}</td>
+<td className="p-4">
+  {item.owned && (
+    <span className="font-bold italic text-slate-400">You own it</span>
+  )}
+</td>
 ```
 
 # End of part 3
