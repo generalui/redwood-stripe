@@ -12,6 +12,7 @@ web/public/mockServiceWorker.js
 web/types/graphql.d.ts
 api/types/graphql.d.ts
 .pnp.*
+.vscode
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
