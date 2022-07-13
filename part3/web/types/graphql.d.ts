@@ -249,7 +249,7 @@ export type PurchasessQueryVariables = Exact<{
 }>;
 
 
-export type PurchasessQuery = { __typename?: 'Query', purchases: Array<{ __typename?: 'Purchase', product: { __typename?: 'Product', id: number, name: string, description?: string | null, imageUrl?: string | null, category: string, price: number } }> };
+export type PurchasessQuery = { __typename?: 'Query', purchases: Array<{ __typename?: 'Purchase', status: PaymentStatus, product: { __typename?: 'Product', id: number, name: string, description?: string | null, imageUrl?: string | null, category: string, price: number } }> };
 
 export type ProductsQueryVariables = Exact<{
   userId?: InputMaybe<Scalars['Int']>;

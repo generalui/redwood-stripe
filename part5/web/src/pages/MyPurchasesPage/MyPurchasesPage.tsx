@@ -7,7 +7,7 @@ const MyPurchasesPage = () => {
   return (
     <>
       <MetaTags title="My purchases" description="My purchases" />
-      <h1>My Products</h1>
+      <h1 className="text-slate-500 mb-5 italic">My Products</h1>
       {currentUser ? (
         <>
           <MyPurchasesCell userId={currentUser.id} />

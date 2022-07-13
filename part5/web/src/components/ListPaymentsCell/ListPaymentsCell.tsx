@@ -52,8 +52,8 @@ export const Success = ({ payments }: CellSuccessProps<ListPaymentsQuery>) => {
                 <td className="p-4">{item.fromEmail}</td>
                 <td className="p-4">
                   $
-                  {item.amount.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
+                  {(item.amount / 100).toLocaleString(undefined, {
+                    minimumFractionDigits: 0,
                   })}
                 </td>
                 <td className="p-4">{item.status}</td>

@@ -1,8 +1,8 @@
 export const CATEGORIES = [
-  'Yacht',
-  'Villa',
-  'Car',
-  'Plane',
-  'Helicopter',
-  'Island',
+  'Designer Wear and Footwear',
+  'Accessories',
+  'Jewelry',
+  'Cosmetics',
+  'Fine Wines / Champagne and Spirits',
+  'Travel Goods',
 ]

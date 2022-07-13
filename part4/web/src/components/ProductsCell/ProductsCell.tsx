@@ -91,7 +91,7 @@ export const Success = ({
                 <td className="p-4">
                   $
                   {item.price.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
+                    minimumFractionDigits: 0,
                   })}
                 </td>
                 {!userId && (

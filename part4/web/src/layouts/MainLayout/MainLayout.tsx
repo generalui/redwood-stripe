@@ -25,7 +25,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <div>
       <div className="overflow-hidden p-2 bg-slate-100 flex justify-between text-slate-500">
-        <div className="font-bold italic">A Luxury Goods Marketplace</div>
+        <div className="font-bold italic">Upmarket</div>
         <nav>
           <ul className="flex gap-3 text-sm">
             {isAuthenticated && (
@@ -37,9 +37,14 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               <Link to={routes.home()}>Home</Link>
             </li>
             {isAuthenticated ? (
-              <li>
-                <button onClick={logOut}>Logout</button>
-              </li>
+              <>
+                <li>
+                  <Link to={routes.myPurchases()}>My Purchases</Link>
+                </li>
+                <li>
+                  <button onClick={logOut}>Logout</button>
+                </li>
+              </>
             ) : (
               <>
                 <li>

@@ -556,7 +556,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <div>
       <div className="overflow-hidden p-2 bg-slate-100 flex justify-between text-slate-500">
-        <div className="font-bold italic">A Luxury Goods Marketplace</div>
+        <div className="font-bold italic">Upmarket</div>
         <nav>
           <ul className="flex gap-3 text-sm">
             {isAuthenticated && (
@@ -644,6 +644,8 @@ const Routes = () => {
 
 export default Routes
 ```
+
+![pick subscription](./screenshots/part1-1.png)
 
 ## Introducting: Stripe Elements
 
@@ -904,7 +906,7 @@ const Subscribe = ({
   }
 
   return (
-    <div className="absolute left-1/2 top-20 -ml-48 p-5 w-96 shadow-lg rounded-md bg-slate-200 text-slate-500">
+    <div className="fixed left-1/2 top-20 -ml-48 p-5 w-96 shadow-lg rounded-md bg-slate-200 text-slate-500">
       <div className="font-bold text-sm uppercase tracking-wide mb-4 pb-2 text-center border-b border-slate-300">
         Subscribe
       </div>
@@ -939,6 +941,8 @@ This also redirects the user our `sellStuff` if payment is successful
 
 And try!
 Go to http://localhost:8910/pick-subscription and pick a subscription, fill out the stripe checkout form (use 4242 4242 4242 4242 as CC number, rest doesn't matter as long as it is valid) and you should get redirected to your ngrok success url. But it fails... With something like 'Invalid Host Header".... Bummer. Interneting, interneting. It turns out that our dev server doesn't accept random host. The good news is [here](https://deploy-preview-605--redwoodjs.netlify.app/docs/webpack-configuration#webpack-dev-server) you can start your dev server with any webpack option and as it turns out, there is an [option](https://webpack.js.org/configuration/dev-server/#devserverallowedhosts) to allow any host. So, you can stop your dev server and restart it with this modified command: `yarn rw dev --forward="--allowed-hosts=all"` make that test again and you should get to the page with the path `/subscription-callback?success=true` as you defined it earlier in the serverless function.
+
+![pay subscription](./screenshots/part1-2.png)
 
 ## Let the server know about the new subscription: Stripe Webhooks
 
@@ -1071,6 +1075,8 @@ export const handler = async (event: APIGatewayEvent) => {
   }
 }
 ```
+
+![wait for payment confirmation](./screenshots/part1-3.png)
 
 ## One last problem
 

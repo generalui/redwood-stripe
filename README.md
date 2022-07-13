@@ -36,6 +36,5 @@ Ok, now that we know we're going to buy an Island in the Pacific very soon, we n
 [Part 5:](part5/readme.md)
 
 - (admin) Payment list
-- (admin) Transfer seller balance to bank account
-- (admin) Subscription list
+- (admin) Sellers list and Sales
 - 🏝️

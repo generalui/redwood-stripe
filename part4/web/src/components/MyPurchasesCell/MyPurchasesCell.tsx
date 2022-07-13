@@ -1,19 +1,5 @@
 import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
-
-type MyPurchase = {
-  product: {
-    id: number
-    name: string
-    category: string
-    description?: string
-    imageUrl?: string
-    price: number
-  }
-}
-
-type MyPurchases = {
-  purchases: MyPurchase[]
-}
+import { PurchasessQuery } from 'types/graphql'
 
 export const QUERY = gql`
   query PurchasessQuery($userId: Int) {
@@ -26,6 +12,7 @@ export const QUERY = gql`
         category
         price
       }
+      status
     }
   }
 `
@@ -38,36 +25,50 @@ export const Failure = ({ error }: CellFailureProps) => (
   <div style={{ color: 'red' }}>Error: {error.message}</div>
 )
 
-export const Success = ({ purchases }: CellSuccessProps<MyPurchases>) => {
+export const Success = ({ purchases }: CellSuccessProps<PurchasessQuery>) => {
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>id</th>
-          <th>name</th>
-          <th>description</th>
-          <th>category</th>
-          <th>image</th>
-          <th>price</th>
+    <table className="border">
+      <thead className="text-left">
+        <tr
+          className="text-slate-500 uppercase tracking-widest"
+          style={{ fontSize: '11px' }}
+        >
+          <th className="text-center p-4">id</th>
+          <th className="p-4">name</th>
+          <th className="p-4">description</th>
+          <th className="p-4">category</th>
+          <th className="p-4">image</th>
+          <th className="p-4">price</th>
         </tr>
       </thead>
       <tbody>
-        {purchases.map(({ product }) => {
-          return (
-            <tr key={product.id}>
-              <td>{product.id}</td>
-              <td>{product.name}</td>
-              <td>{product.description}</td>
-              <td>{product.category}</td>
-              <td>
-                {product.imageUrl && (
-                  <img width="100" src={product.imageUrl} alt={product.name} />
-                )}
-              </td>
-              <td>{product.price}</td>
-            </tr>
-          )
-        })}
+        {purchases
+          .filter((purchase) => purchase.status === 'success')
+          .map(({ product }, index) => {
+            return (
+              <tr key={index}>
+                <td className="p-4">{product.id}</td>
+                <td className="p-4">{product.name}</td>
+                <td className="p-4">{product.description}</td>
+                <td className="p-4">{product.category}</td>
+                <td className="p-4">
+                  {product.imageUrl && (
+                    <img
+                      width="100"
+                      src={product.imageUrl}
+                      alt={product.name}
+                    />
+                  )}
+                </td>
+                <td className="p-4">
+                  $
+                  {product.price.toLocaleString(undefined, {
+                    minimumFractionDigits: 0,
+                  })}
+                </td>
+              </tr>
+            )
+          })}
       </tbody>
     </table>
   )

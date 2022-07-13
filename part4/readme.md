@@ -241,6 +241,8 @@ const SignupPage = () => {
   }, [currentUser])
 ```
 
+![stripe connected account onboarding](./screenshots/part4-1.png)
+
 ## Flip the stripeOnboardingDone flag when onboarding is completed
 
 Stripe documentation talks about 2 main ways of checking if payouts are enabled for a connected account (see [here](https://stripe.com/docs/connect/collect-then-transfer-guide)):
@@ -319,23 +321,26 @@ export default SellStuffPage
 ## Payout to connected account and collect fee
 
 We will use Stripe Connect's [destination charge](https://stripe.com/docs/connect/destination-charges) to pay the connected account and collect a fee
-First, let's set the fee we want to collect on every transaction in our marketplace. We can add this to our `.env` file:
+First, let's set the fee we want to collect on every transaction in our marketplace according to the subscriptions we set up in. We can add this to our `.env` file:
 
 ```
-PLATFORM_FEE=0.05
+PLATFORM_FEE_BASIC=0.1
+PLATFORM_FEE_PRO=0.03
 ```
 
 The only thing left to do is to modify the creation of the payment intent in `createPaymentIntent.ts`:
 
 ```ts
 const paymentIntent = await stripe.paymentIntents.create({
-  amount: product.price,
+  amount: product.price * 100,
   currency: 'usd',
   customer: user.stripeCustomerId,
   automatic_payment_methods: {
     enabled: true,
   },
-  application_fee_amount: product.price * +process.env.PLATFORM_FEE,
+  application_fee_amount:
+    product.price *
+    +process.env[`PLATFORM_FEE_${product.user.subscriptionName.toUpperCase()}`],
   transfer_data: {
     destination: product.user.stripeAccountId,
   },
@@ -477,6 +482,16 @@ export default SellStuffPage
 
 You can now check that the `Add Product` button is rendering for a subscribed seller.
 To check with a cancelled subscription go to https://dashboard.stripe.com/test/subscriptions and cancel the subscription of your logged in seller, then refresh the sell stuff page and the `Add Product` has disappeared.
+
+## Check connected account purchase and fees
+
+You can see that directly on the Stripe website, go to the [connect](https://dashboard.stripe.com/test/connect/accounts/overview) portal and click on the individual connected to get the details.
+
+In `Money movements`, click on payments:
+![connected acconut payments](./screenshots/part4.2.png)
+
+And check the collected fees on the `Collected fees` tab:
+![connected account collected fee](./screenshots/part4-3.png)
 
 # End of part 4
 

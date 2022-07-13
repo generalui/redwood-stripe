@@ -22,9 +22,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   return (
     <div>
       <div className="overflow-hidden p-2 bg-amber-100 flex justify-between text-amber-800">
-        <div className="font-bold italic">
-          A Luxury Goods Marketplace - Admin
-        </div>
+        <div className="font-bold italic">Upmarket - Admin</div>
         <nav>
           <ul className="flex gap-3 text-sm">
             {isAuthenticated && (

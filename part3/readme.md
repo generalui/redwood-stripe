@@ -106,7 +106,7 @@ export const handler = async (event: APIGatewayEvent) => {
     const product = await getProduct(+productId)
     try {
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: product.price,
+        amount: product.price * 100,
         currency: 'usd',
         customer: user.stripeCustomerId,
         automatic_payment_methods: {
@@ -303,20 +303,18 @@ const Checkout = ({
   }
 
   useEffect(() => {
-    if (data?.purchase) {
-      if (data.purchase.status === 'success') {
-        navigate(routes.myPurchases())
-        return
-      }
-      if (data.purchase.status !== 'failed') {
-        setTimeout(checkForConfirmation, 2000)
-      }
+    if (data?.purchase.status === 'success') {
+      navigate(routes.myPurchases())
+      return
+    }
+    if (data?.purchase.status !== 'failed') {
+      setTimeout(checkForConfirmation, 2000)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
   return (
-    <div className="absolute left-1/2 top-20 -ml-48 p-5 w-96 shadow-lg rounded-md bg-slate-200 text-slate-500">
+    <div className="fixed left-1/2 top-20 -ml-48 p-5 w-96 shadow-lg rounded-md bg-slate-200 text-slate-500">
       <div className="font-bold text-sm uppercase tracking-wide mb-4 pb-2 text-center border-b border-slate-300">
         Checkout
       </div>
@@ -398,7 +396,7 @@ Now add the component to `ProductsCell.tsx`
             <td className="p-4">
               $
               {item.price.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
+                minimumFractionDigits: 0,
               })}
             </td>
             {!userId && (
@@ -488,6 +486,8 @@ async function isSubscriptionClientSecret(clientSecret: string) {
 
 The main different is the `if isSubscriptionClientSecret` statement where in the else cause we know that it's not a subcription and we can update the purchase with the corresponding `clientSecret` to the `success` status
 
+![buy product](./screenshots/part3-1.png)
+
 ## Generate purchases sdl
 
 We could create a function to retrieve the purchase by id, but I think that would be an error, it seems more fitting to create a sdl as the `purchase` object apparents itself to a REST resource that can be queried itself or through its relationship to users and products.
@@ -560,7 +560,7 @@ const MyPurchasesPage = () => {
   return (
     <>
       <MetaTags title="My purchases" description="My purchases" />
-      <h1>My Products</h1>
+      <h1 className="text-slate-500 mb-5 italic">My Products</h1>
       {currentUser ? (
         <>
           <MyPurchasesCell userId={currentUser.id} />
@@ -574,6 +574,112 @@ const MyPurchasesPage = () => {
 
 export default MyPurchasesPage
 ```
+
+And `MyPurchasesCell` ressembles `ProductsCell`:
+
+```tsx
+import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
+
+type MyPurchase = {
+  product: {
+    id: number
+    name: string
+    category: string
+    description?: string
+    imageUrl?: string
+    price: number
+  }
+}
+
+type MyPurchases = {
+  purchases: MyPurchase[]
+}
+
+export const QUERY = gql`
+  query PurchasessQuery($userId: Int) {
+    purchases(userId: $userId) {
+      product {
+        id
+        name
+        description
+        imageUrl
+        category
+        price
+      }
+    }
+  }
+`
+
+export const Loading = () => <div>Loading...</div>
+
+export const Empty = () => <div>Empty</div>
+
+export const Failure = ({ error }: CellFailureProps) => (
+  <div style={{ color: 'red' }}>Error: {error.message}</div>
+)
+
+export const Success = ({ purchases }: CellSuccessProps<MyPurchases>) => {
+  return (
+    <table className="border">
+      <thead className="text-left">
+        <tr
+          className="text-slate-500 uppercase tracking-widest"
+          style={{ fontSize: '11px' }}
+        >
+          <th className="text-center p-4">id</th>
+          <th className="p-4">name</th>
+          <th className="p-4">description</th>
+          <th className="p-4">category</th>
+          <th className="p-4">image</th>
+          <th className="p-4">price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {purchases.map(({ product }) => {
+          return (
+            <tr key={product.id}>
+              <td className="p-4">{product.id}</td>
+              <td className="p-4">{product.name}</td>
+              <td className="p-4">{product.description}</td>
+              <td className="p-4">{product.category}</td>
+              <td className="p-4">
+                {product.imageUrl && (
+                  <img width="100" src={product.imageUrl} alt={product.name} />
+                )}
+              </td>
+              <td className="p-4">
+                $
+                {product.price.toLocaleString(undefined, {
+                  minimumFractionDigits: 0,
+                })}
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+}
+```
+
+Aditionally, we can add a menu entry to access this page directly from the menu by editing our `MainLayout.tsx`:
+
+```tsx
+...
+    {isAuthenticated ? (
+      <>
+        <li>
+          <Link to={routes.myPurchases()}>My Purchases</Link>
+        </li>
+        <li>
+          <button onClick={logOut}>Logout</button>
+        </li>
+      </>
+    ) : (
+...
+```
+
+![my products](./screenshots/part3-3.png)
 
 ## implement checkForConfirmation
 
@@ -609,18 +715,18 @@ const checkForConfirmation = () => {
 }
 
 useEffect(() => {
-  if (data?.purchase) {
-    if (data.purchase.status === 'success') {
-      navigate(routes.myPurchases())
-      return
-    }
-    if (data.purchase.status !== 'failed') {
-      setTimeout(checkForConfirmation, 2000)
-    }
+  if (data?.purchase.status === 'success') {
+    navigate(routes.myPurchases())
+    return
+  }
+  if (data?.purchase.status !== 'failed') {
+    setTimeout(checkForConfirmation, 2000)
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [data])
 ```
+
+![wait for purchase confirmation](./screenshots/part3-2.png)
 
 ## Signal when a product is owned
 

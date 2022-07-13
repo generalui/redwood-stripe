@@ -15,7 +15,7 @@ export const handler = async (event: APIGatewayEvent) => {
     const product = await getProduct(+productId)
     try {
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: product.price,
+        amount: product.price * 100,
         currency: 'usd',
         customer: user.stripeCustomerId,
         automatic_payment_methods: {

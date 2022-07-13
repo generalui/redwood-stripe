@@ -25,7 +25,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   return (
     <div>
       <div className="overflow-hidden p-2 bg-slate-100 flex justify-between text-slate-500">
-        <div className="font-bold italic">A Luxury Goods Marketplace</div>
+        <div className="font-bold italic">Upmarket</div>
         <nav>
           <ul className="flex gap-3 text-sm">
             {isAuthenticated && (

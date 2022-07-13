@@ -139,7 +139,7 @@ export const Success = ({ payments }: CellSuccessProps<ListPaymentsQuery>) => {
                 <td className="p-4">
                   $
                   {item.amount.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
+                    minimumFractionDigits: 0,
                   })}
                 </td>
                 <td className="p-4">{item.status}</td>
@@ -195,6 +195,8 @@ const AdminPage = () => {
 export default AdminPage
 ```
 
+![list payments](./screenshots/part5-1.png)
+
 ## Add recipient and payment type
 
 Some problems with this first list:
@@ -208,13 +210,15 @@ In `api/src/functions/createPaymentIntent/createPaymentIntent.ts` replace the `s
 
 ```ts
 const paymentIntent = await stripe.paymentIntents.create({
-  amount: product.price,
+  amount: product.price * 100,
   currency: 'usd',
   customer: user.stripeCustomerId,
   automatic_payment_methods: {
     enabled: true,
   },
-  application_fee_amount: product.price * +process.env.PLATFORM_FEE,
+  application_fee_amount:
+    product.price *
+    +process.env[`PLATFORM_FEE_${product.user.subscriptionName.toUpperCase()}`],
   transfer_data: {
     destination: product.user.stripeAccountId,
   },
@@ -344,13 +348,15 @@ Open `api/src/functions/createPaymentIntent/createPaymentIntent.ts` and modify t
 
 ```ts
 const paymentIntent = await stripe.paymentIntents.create({
-  amount: product.price,
+  amount: product.price * 100,
   currency: 'usd',
   customer: user.stripeCustomerId,
   automatic_payment_methods: {
     enabled: true,
   },
-  application_fee_amount: product.price * +process.env.PLATFORM_FEE,
+  application_fee_amount:
+    product.price *
+    +process.env[`PLATFORM_FEE_${product.user.subscriptionName.toUpperCase()}`],
   transfer_data: {
     destination: product.user.stripeAccountId,
   },
@@ -527,7 +533,7 @@ export const Success = ({ payments }: CellSuccessProps<ListPaymentsQuery>) => {
 }
 ```
 
-We can link those together now by adding the link in `ListPaymentsCell.tsx`:
+![seller sales](./screenshots/part5-2.png)
 
 ## Seller list page
 
@@ -653,9 +659,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   return (
     <div>
       <div className="overflow-hidden p-2 bg-amber-100 flex justify-between text-amber-800">
-        <div className="font-bold italic">
-          A Luxury Goods Marketplace - Admin
-        </div>
+        <div className="font-bold italic">Upmarket - Admin</div>
         <nav>
           <ul className="flex gap-3 text-sm">
             {isAuthenticated && (
@@ -708,6 +712,6 @@ import AdminLayout from './layouts/AdminLayout/AdminLayout'
 
 Congrats! You're probably now sipping a margarita in the middle of your infinity pool on your new island in the Pacific, big enough to welcome a successful edition of the [Fyre festival](https://en.wikipedia.org/wiki/Fyre_Festival), and you're wondering, "what kind of products did we even sell?"
 
-Actually there is a limit in the amount that Stripe allows you to charge, and that limit seems to be $99.999.900. So that's probably good for most goods, unless you want to sell an [island](https://www.privateislandsonline.com/asia/thailand/rangyai-island)...
+Actually there is a limit in the amount that Stripe allows you to charge, and that limit seems to be $999.999. So that's probably good for most goods, unless you want to sell an [island](https://www.privateislandsonline.com/asia/thailand/rangyai-island)...
 
 I hope you enjoyed the tutorial. Or if you skipped to the end to check out where the repo with all the code [here it is](https://github.com/generalui/redwood-stripe.git)
