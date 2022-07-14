@@ -408,7 +408,7 @@ export const payments: QueryResolvers['payments'] = async ({
 
 ## Display sellers' payouts
 
-Let's create a seller page where we will see the purchase linked to this seller and be able to transfer the funds from the connected account to the seller's bank account.
+Let's create a seller page where we will see the purchase linked to this seller.
 
 ```
 yarn rw g page SellerAdmin
