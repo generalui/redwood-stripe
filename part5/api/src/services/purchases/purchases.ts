@@ -10,7 +10,6 @@ export const purchases: QueryResolvers['purchases'] = ({
 }: {
   userId?: number
 }) => {
-  console.log('--->', userId)
   if (userId) {
     return db.purchase.findMany({ where: { userId } })
   }
