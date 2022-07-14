@@ -3,7 +3,7 @@ import { useRef } from 'react'
 import {
   Form,
   Label,
-  TextField,
+  EmailField,
   PasswordField,
   FieldError,
   Submit,
@@ -72,12 +72,13 @@ const SignupPage = () => {
                   >
                     Email
                   </Label>
-                  <TextField
+                  <EmailField
                     name="username"
                     className="rw-input"
                     errorClassName="rw-input rw-input-error"
                     ref={usernameRef}
                     validation={{
+                      required: { value: true, message: 'Email is required' },
                       pattern: {
                         value: /(.+)@(.+){2,}\.(.+){2,}/,
                         message: 'Incorrect email format',

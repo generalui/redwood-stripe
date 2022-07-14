@@ -115,7 +115,7 @@ Let's make it the home page by updating the path
 
 ## Seller signup
 
-Typically a market place has 2 different kind of users. Reguular users (buyers / customers) and sellers. We could also have admins, but that's outside the scope of this tutorial. We will use the roles attribute on the user model to store this information.
+Typically a market place has 2 different kind of users. Regular users (buyers / customers) and sellers. We could also have admins, but that's outside the scope of this tutorial. We will use the roles attribute on the user model to store this information.
 
 Update `SignupPage.tsx` with the following, right after `<FieldError name="password" className="rw-field-error" />`:
 
@@ -134,12 +134,13 @@ And while we're in this file, let's make another update because we want to signu
 >
   Email
 </Label>
-<TextField
+<EmailField
   name="username"
   className="rw-input"
   errorClassName="rw-input rw-input-error"
   ref={usernameRef}
   validation={{
+    required: { value: true, message: 'Email is required' },
     pattern: {
       value: /(.+)@(.+){2,}\.(.+){2,}/,
       message: 'Incorrect email format',
@@ -155,8 +156,8 @@ handler: ({ username, hashedPassword, salt, userAttributes }) => {
   return db.user.create({
     data: {
       email: username,
-      hashedPassword: hashedPassword,
-      salt: salt,
+      hashedPassword,
+      salt,
       roles: userAttributes.seller ? ['seller'] : [],
     },
   })
@@ -647,7 +648,7 @@ export default Routes
 
 ![pick subscription](./screenshots/part1-1.png)
 
-## Introducting: Stripe Elements
+## Introducing: Stripe Elements
 
 We intentionally left the `createSubscription` method empty, because that's where we'll want to initiate a recurring payment. Stripe is providing a [great repository](https://github.com/stripe-samples/subscription-use-cases) full examples of different subscription models.
 
