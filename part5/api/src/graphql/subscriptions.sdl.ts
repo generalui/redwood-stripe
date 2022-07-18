@@ -13,4 +13,8 @@ export const schema = gql`
     subscriptions: [Subscription!]! @skipAuth
     isSubscriptionValid(userId: Int!): Boolean! @skipAuth
   }
+
+  type Mutation {
+    createSubscription(id: String!): String! @requireAuth
+  }
 `

@@ -19,6 +19,16 @@ export type Scalars = {
   URL: any;
 };
 
+export type Mutation = {
+  __typename?: 'Mutation';
+  createSubscription: Scalars['String'];
+};
+
+
+export type MutationcreateSubscriptionArgs = {
+  id: Scalars['String'];
+};
+
 export type Query = {
   __typename?: 'Query';
   redwood?: Maybe<Redwood>;
@@ -45,3 +55,10 @@ export type SubscriptionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SubscriptionsQuery = { __typename?: 'Query', subscriptions: Array<{ __typename?: 'Subscription', id: string, name: string, price: number, currency: string, description?: string | null }> };
+
+export type CreateSubscriptionMutationVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type CreateSubscriptionMutation = { __typename?: 'Mutation', createSubscription: string };

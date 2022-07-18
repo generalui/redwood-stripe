@@ -1,8 +1,9 @@
 import type { Subscription } from 'types/graphql'
-import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
+import { CellSuccessProps, CellFailureProps, useMutation } from '@redwoodjs/web'
 import { useAuth } from '@redwoodjs/auth'
 import { useState } from 'react'
 import Subscribe from '../Subscribe/Subscribe'
+import { toast } from '@redwoodjs/web/toast'
 
 export const QUERY = gql`
   query SubscriptionsQuery {
@@ -13,6 +14,12 @@ export const QUERY = gql`
       currency
       description
     }
+  }
+`
+
+const CREATE_SUBSCRIPTION = gql`
+  mutation CreateSubscriptionMutation($id: String!) {
+    createSubscription(id: $id)
   }
 `
 
@@ -29,6 +36,7 @@ export const Success = ({
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
   const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
+  const [create, { data }] = useMutation(CREATE_SUBSCRIPTION)
   const [loading, setIsLoading] = useState(false)
   const createSubscription = async (subscription: Subscription) => {
     setIsLoading(true)

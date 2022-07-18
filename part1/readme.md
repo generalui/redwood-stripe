@@ -488,9 +488,7 @@ export const Success = ({
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
   const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
-  const createSubscription = async (subscription: Subscription) => {
-    // Get client secret from stripe...
-  }
+  const [create, { data }] = useMutation(CREATE_SUBSCRIPTION)
   return (
     <div className="w-80 mx-auto">
       <p className="text-slate-500 text-center">Pick a subscription</p>
@@ -499,7 +497,9 @@ export const Success = ({
           return (
             <li key={item.id}>
               <button
-                onClick={() => createSubscription(item)}
+                onClick={() => {
+                  /* Get client secret from stripe... */
+                }}
                 disabled={currentUser?.subscriptionName === item.name}
                 className={`py-2 px-4 ${
                   currentUser?.subscriptionName === item.name
@@ -513,7 +513,14 @@ export const Success = ({
           )
         })}
       </ul>
-      {clientSecret && <Subscribe clientSecret={clientSecret} />}
+      {clientSecret && (
+        <Subscribe
+          clientSecret={clientSecret}
+          onClose={() => {
+            setClientSecret('')
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -650,72 +657,43 @@ export default Routes
 
 ## Introducing: Stripe Elements
 
-We intentionally left the `createSubscription` method empty, because that's where we'll want to initiate a recurring payment. Stripe is providing a [great repository](https://github.com/stripe-samples/subscription-use-cases) full examples of different subscription models.
+We intentionally left the `onClick` handler empty, because that's where we'll want to initiate a recurring payment. Stripe is providing a [great repository](https://github.com/stripe-samples/subscription-use-cases) full examples of different subscription models.
 
-The Node implementation of these examples all use Express. With Redwood we'll use serverless functions instead. Let's start by creating the first function
-`yarn rw g function createSubscription`
+The Node implementation of these examples all use Express. With Redwood we'll use graphql instead. Let's start by adding the mutation to `subscriptions.sdl.ts`:
 
-And copy this code inside
+```graphql
+type Mutation {
+  createSubscription(id: String!): String! @requireAuth
+}
+```
+
+And then add the implementation in `part1/api/src/services/subscriptions/subscriptions.ts`
 
 ```ts
-import type { APIGatewayEvent } from 'aws-lambda'
-import { db } from 'src/lib/db'
-import { logger } from 'src/lib/logger'
-import { stripe } from 'src/lib/stripe'
-import { User } from '@prisma/client'
-import Stripe from 'stripe'
-
-export const handler = async (event: APIGatewayEvent) => {
-  logger.info('Invoked createSubscription function')
-  if (event.httpMethod !== 'POST') {
-    throw new Error('Only post method for this function please')
-  }
-  const { userId, subscriptionId } = JSON.parse(event.body)
-  if (userId && subscriptionId) {
+export const createSubscription = async ({ id }: { id: string }) => {
+  const userId = context.currentUser?.id
+  if (userId && id) {
     const user = await getUser(+userId)
-    const product = await getSubscription(subscriptionId)
+    const product = await getSubscription(id)
     const customer = await stripe.customers.create({
       name: user.email,
     })
     const priceId = product.default_price as string
-    try {
-      const { clientSecret } = await createSubscription(customer.id, priceId)
-      await db.user.update({
-        where: { id: user.id },
-        data: {
-          stripeClientSecret: clientSecret,
-          subscriptionStatus: 'init',
-          subscriptionName: product.name,
-        },
-      })
-      return {
-        statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          clientSecret,
-        }),
-      }
-    } catch (error) {
-      return {
-        statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: error.message }),
-      }
-    }
+    const { clientSecret } = await createStripeSubscription(
+      customer.id,
+      priceId
+    )
+    await db.user.update({
+      where: { id: user.id },
+      data: {
+        stripeClientSecret: clientSecret,
+        subscriptionStatus: 'init',
+        subscriptionName: product.name,
+      },
+    })
+    return clientSecret
   }
-  return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      data: 'nothing happened...',
-    }),
-  }
+  throw new Error('Could not create subscription')
 }
 
 async function getUser(userId: number): Promise<User> {
@@ -736,7 +714,7 @@ async function getSubscription(
   return product
 }
 
-async function createSubscription(
+async function createStripeSubscription(
   customerId: string,
   priceId: string
 ): Promise<{ clientSecret: string; subscriptionId: string }> {
@@ -762,8 +740,8 @@ async function createSubscription(
 
 Let's unpack this a little bit:
 
-- The handler retrieves in the body to the request a `userId` and `subscriptionId` so that's what our frontend will need to send
-- Based on those we retrieve a user and a subscription (set `getUser` and `getSusbcription`)
+- We retrieve the `userId` from the context and subscription's `id` from the mutation's arguments
+- Based on those we retrieve a user and a subscription (set `getUser` and `getSubscription`)
 - One subtlety about `getSubscription` is that it needs to return the `client_secret`, available in the deeply nested object `latest_invoice.payment_intent`. Fortunately Stripe API allows you to retrieve deeply nested objects with the `expand` keyword, all we have to do is
 
 ```ts
@@ -772,44 +750,35 @@ expand: ['latest_invoice.payment_intent'],
 
 - We can now update the user model with the `subscriptionStatus`, `subscriptionName` and `clientSecret`. We need the client secret because when Stripe will confirm the trasaction, it will send this clientSecret and we can connect it to the user this way.
 
-At this point it would be nice to test if this function is doing what it supposed to and we get redirected. Get a `userId` from your db (if there isn't any, go to http://localhost:8910/signup, create a user and look up his id), get a priceId (see the list subscriptions section) and try
-
-```bash
-curl --location --request GET 'http://localhost:8910/.redwood/functions/createSubscription?priceId=price_1L8BTLCoThLt2WWY4gs2sBdk&subscriptionName=Basic&userId=1' --header 'Content-Type: application/json'
-
-```
-
-You should get an html file in return and your payment activity table should have a new row
-
 ## Tying it all together
 
 We're almost ready to try our subscription registration. We need 3 last things...
 
 **1. Call our new serverless function**
 
-First things first, let's update our `createSubscription` function in our `SubscriptionCell.tsx`:
+First things first, let's update `SubscriptionCell.tsx`, add the `createSubscription` mutation and update the `onClick` handler:
 
 ```tsx
+const CREATE_SUBSCRIPTION = gql`
+  mutation CreateSubscriptionMutation($id: String!) {
+    createSubscription(id: $id)
+  }
+`
+
 export const Success = ({
   subscriptions,
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
   const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
-  const createSubscription = async (subscription: Subscription) => {
-    const response = await fetch(`${global.RWJS_API_URL}/createSubscription`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId: currentUser.id,
-        subscriptionId: subscription.id,
-      }),
-    })
-    const { clientSecret } = await response.json()
-    await reauthenticate()
-    setClientSecret(clientSecret)
-  }
+  const [create, { data }] = useMutation(CREATE_SUBSCRIPTION)
+  useEffect(() => {
+    if (data) {
+      reauthenticate()
+      setClientSecret(data.createSubscription)
+    } else {
+      toast.error('Could not create subscription')
+    }
+  }, [data])
   return (
     <div className="w-80 mx-auto">
       <p className="text-slate-500 text-center">Pick a subscription</p>
@@ -818,7 +787,11 @@ export const Success = ({
           return (
             <li key={item.id}>
               <button
-                onClick={() => createSubscription(item)}
+                onClick={() =>
+                  create({
+                    variables: { id: item.id },
+                  })
+                }
                 disabled={currentUser?.subscriptionName === item.name}
                 className={`py-2 px-4 ${
                   currentUser?.subscriptionName === item.name
@@ -832,7 +805,14 @@ export const Success = ({
           )
         })}
       </ul>
-      {clientSecret && <Subscribe clientSecret={clientSecret} />}
+      {clientSecret && (
+        <Subscribe
+          clientSecret={clientSecret}
+          onClose={() => {
+            setClientSecret('')
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -1,8 +1,9 @@
 import type { Subscription } from 'types/graphql'
-import type { CellSuccessProps, CellFailureProps } from '@redwoodjs/web'
+import { CellSuccessProps, CellFailureProps, useMutation } from '@redwoodjs/web'
 import { useAuth } from '@redwoodjs/auth'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Subscribe from '../Subscribe/Subscribe'
+import { toast } from '@redwoodjs/web/toast'
 
 export const QUERY = gql`
   query SubscriptionsQuery {
@@ -13,6 +14,12 @@ export const QUERY = gql`
       currency
       description
     }
+  }
+`
+
+const CREATE_SUBSCRIPTION = gql`
+  mutation CreateSubscriptionMutation($id: String!) {
+    createSubscription(id: $id)
   }
 `
 
@@ -29,21 +36,15 @@ export const Success = ({
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
   const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
-  const createSubscription = async (subscription: Subscription) => {
-    const response = await fetch(`${global.RWJS_API_URL}/createSubscription`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId: currentUser.id,
-        subscriptionId: subscription.id,
-      }),
-    })
-    const { clientSecret } = await response.json()
-    await reauthenticate()
-    setClientSecret(clientSecret)
-  }
+  const [create, { data }] = useMutation(CREATE_SUBSCRIPTION)
+  useEffect(() => {
+    if (data) {
+      reauthenticate()
+      setClientSecret(data.createSubscription)
+    } else {
+      toast.error('Could not create subscription')
+    }
+  }, [data])
   return (
     <div className="w-80 mx-auto">
       <p className="text-slate-500 text-center">Pick a subscription</p>
@@ -52,7 +53,11 @@ export const Success = ({
           return (
             <li key={item.id}>
               <button
-                onClick={() => createSubscription(item)}
+                onClick={() =>
+                  create({
+                    variables: { id: item.id },
+                  })
+                }
                 disabled={currentUser?.subscriptionName === item.name}
                 className={`py-2 px-4 ${
                   currentUser?.subscriptionName === item.name
@@ -66,7 +71,14 @@ export const Success = ({
           )
         })}
       </ul>
-      {clientSecret && <Subscribe clientSecret={clientSecret} />}
+      {clientSecret && (
+        <Subscribe
+          clientSecret={clientSecret}
+          onClose={() => {
+            setClientSecret('')
+          }}
+        />
+      )}
     </div>
   )
 }
