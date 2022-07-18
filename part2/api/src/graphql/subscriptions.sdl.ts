@@ -15,5 +15,6 @@ export const schema = gql`
 
   type Mutation {
     createSubscription(id: String!): String! @requireAuth
+    cancelSubscription(id: String!): Boolean! @requireAuth
   }
 `

@@ -1,30 +1,35 @@
 import { useAuth } from '@redwoodjs/auth'
 import { navigate, routes } from '@redwoodjs/router'
-import { MetaTags } from '@redwoodjs/web'
+import { MetaTags, useMutation } from '@redwoodjs/web'
+import { toast } from '@redwoodjs/web/toast'
+import { useEffect } from 'react'
+
+const CANCEL_SUBSCRIPTION = gql`
+  mutation CancelSubscriptionMutation($id: String!) {
+    cancelSubscription(id: $id)
+  }
+`
 
 const ManageSubscriptionPage = () => {
   const { currentUser, reauthenticate } = useAuth()
+  const [cancel, { data }] = useMutation(CANCEL_SUBSCRIPTION)
   const cancelSubscription = async () => {
-    if (confirm('Do you really want to cancel your subscriptions?')) {
-      const response = await fetch(
-        `${global.RWJS_API_URL}/cancelSubscription`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: currentUser.id,
-            subscriptionId: currentUser.subscriptionId,
-          }),
-        }
-      )
-      if (response.status === 201) {
-        await reauthenticate()
-        navigate(routes.home())
-      }
+    if (confirm('Do you really want to cancel your subscription?')) {
+      cancel({
+        variables: { id: currentUser.subscriptionId },
+      })
     }
   }
+  useEffect(() => {
+    if (data) {
+      if (data.cancelSubscription) {
+        reauthenticate()
+        navigate(routes.home())
+      } else {
+        toast.error('Enable to cancel this subscription at the moment')
+      }
+    }
+  }, [data])
   return (
     <>
       <MetaTags

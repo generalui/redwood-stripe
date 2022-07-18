@@ -67,7 +67,7 @@ async function getSubscription(
 async function createStripeSubscription(
   customerId: string,
   priceId: string
-): Promise<{ clientSecret: string; subscriptionId: string }> {
+): Promise<{ clientSecret: string }> {
   const subscription = await stripe.subscriptions.create({
     customer: customerId,
     items: [
@@ -83,6 +83,5 @@ async function createStripeSubscription(
       (subscription.latest_invoice as Stripe.Invoice)
         .payment_intent as Stripe.PaymentIntent
     ).client_secret,
-    subscriptionId: subscription.id,
   }
 }

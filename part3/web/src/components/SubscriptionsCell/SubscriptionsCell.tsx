@@ -39,10 +39,12 @@ export const Success = ({
   const [create, { data }] = useMutation(CREATE_SUBSCRIPTION)
   useEffect(() => {
     if (data) {
-      reauthenticate()
-      setClientSecret(data.createSubscription)
-    } else {
-      toast.error('Could not create subscription')
+      if (data.createSubscription) {
+        reauthenticate()
+        setClientSecret(data.createSubscription)
+      } else {
+        toast.error('Could not create subscription')
+      }
     }
   }, [data])
   return (

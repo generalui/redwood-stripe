@@ -29,7 +29,7 @@ export const createSubscription = async ({ id }: { id: string }) => {
       name: user.email,
     })
     const priceId = product.default_price as string
-    const { clientSecret } = await createStripeSubscription(
+    const { clientSecret, subscriptionId } = await createStripeSubscription(
       customer.id,
       priceId
     )
@@ -39,9 +39,27 @@ export const createSubscription = async ({ id }: { id: string }) => {
         stripeClientSecret: clientSecret,
         subscriptionStatus: 'init',
         subscriptionName: product.name,
+        subscriptionId,
       },
     })
     return clientSecret
+  }
+  throw new Error('Could not create subscription')
+}
+
+export const cancelSubscription = async ({ id }: { id: string }) => {
+  const userId = context.currentUser?.id
+  if (userId && id) {
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        subscriptionId: null,
+        subscriptionName: null,
+        subscriptionStatus: null,
+      },
+    })
+    await stripe.subscriptions.del(id)
+    return true
   }
   throw new Error('Could not create subscription')
 }

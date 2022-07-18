@@ -80,7 +80,7 @@ yarn rw prisma migrate dev
 
 ## Create payment intent function
 
-The same way we used `stripe.subscriptions.create` in a `createSubscription` function to allow user to subscribe as a seller to our marketplace, we will create a `createPaymentIntent` function and use `stripe.paymentIntents.create` (according to the [doc](https://stripe.com/docs/payments/quickstart)) to allow users to buy a product from a seller.
+We could add the `createPaymentIntent` mutation in a `paymentIntent.sdl.ts` and create the corresponding service, but just to do something different we will create a `createPaymentIntent` serverless function and use `stripe.paymentIntents.create` (according to the [doc](https://stripe.com/docs/payments/quickstart)) to allow users to buy a product from a seller.
 
 ```
 yarn rw g function createPaymentIntent

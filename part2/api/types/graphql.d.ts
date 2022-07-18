@@ -51,7 +51,9 @@ export type CreateUserInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  cancelSubscription: Scalars['Boolean'];
   createProduct: Product;
+  createSubscription: Scalars['String'];
   createUser: User;
   deleteProduct: Product;
   deleteUser: User;
@@ -60,8 +62,18 @@ export type Mutation = {
 };
 
 
+export type MutationcancelSubscriptionArgs = {
+  id: Scalars['String'];
+};
+
+
 export type MutationcreateProductArgs = {
   input: CreateProductInput;
+};
+
+
+export type MutationcreateSubscriptionArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -328,7 +340,9 @@ export interface JSONObjectScalarConfig extends GraphQLScalarTypeConfig<Resolver
 }
 
 export type MutationResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  cancelSubscription?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationcancelSubscriptionArgs, 'id'>>;
   createProduct?: Resolver<ResolversTypes['Product'], ParentType, ContextType, RequireFields<MutationcreateProductArgs, 'input'>>;
+  createSubscription?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationcreateSubscriptionArgs, 'id'>>;
   createUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationcreateUserArgs, 'input'>>;
   deleteProduct?: Resolver<ResolversTypes['Product'], ParentType, ContextType, RequireFields<MutationdeleteProductArgs, 'id'>>;
   deleteUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationdeleteUserArgs, 'id'>>;

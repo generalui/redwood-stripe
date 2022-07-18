@@ -158,68 +158,66 @@ export const getCurrentUser = async (session) => {
 
 ## Create a new cancel subscription function
 
-Let's create a simple `cancelSubscription` function that reset the user's subscription related properties and deletes the subscription on the stripe side
+Let's create a simple `cancelSubscription` mutation in `subscriptions.sdl.ts` that reset the user's subscription related properties and deletes the subscription on the stripe side
 
-```
-yarn rw g function cancelSubscription
+```graphql
+type Mutation {
+  createSubscription(id: String!): String! @requireAuth
+  cancelSubscription(id: String!): Boolean! @requireAuth
+}
 ```
 
-`cancelSubscription.ts`'s implementation is the following:
+The `cancelSubscription` method in `subscriptions.ts`' is the following:
 
 ```ts
-import type { APIGatewayEvent } from 'aws-lambda'
-import { db } from 'src/lib/db'
-import { logger } from 'src/lib/logger'
-import { stripe } from 'src/lib/stripe'
-
-export const handler = async (event: APIGatewayEvent) => {
-  logger.info('Invoked cancelSubscription function')
-  if (event.httpMethod !== 'POST') {
-    throw new Error('Only post method for this function please')
+export const cancelSubscription = async ({ id }: { id: string }) => {
+  const userId = context.currentUser?.id
+  if (userId && id) {
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        subscriptionId: null,
+        subscriptionName: null,
+        subscriptionStatus: null,
+      },
+    })
+    await stripe.subscriptions.del(id)
+    return true
   }
-  const { userId, subscriptionId } = JSON.parse(event.body)
-  await db.user.update({
-    where: { id: userId },
-    data: {
-      subscriptionId: null,
-      subscriptionName: null,
-      subscriptionStatus: null,
-    },
-  })
-  await stripe.subscriptions.del(subscriptionId)
-  return {
-    statusCode: 201,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      data: 'Subscription deleted',
-    }),
-  }
+  throw new Error('Could not create subscription')
 }
 ```
 
 Now on the frontend we can implement the `cancelSubscription` method:
 
 ```tsx
-const { currentUser, reauthenticate } = useAuth()
-const cancelSubscription = async () => {
-  if (confirm('Do you really want to cancel your subscriptions?')) {
-    const response = await fetch(`${global.RWJS_API_URL}/cancelSubscription`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId: currentUser.id,
-        subscriptionId: currentUser.subscriptionId,
-      }),
-    })
-    if (response.status === 201) {
-      await reauthenticate()
-      navigate(routes.home())
+const CANCEL_SUBSCRIPTION = gql`
+  mutation CancelSubscriptionMutation($id: String!) {
+    cancelSubscription(id: $id)
+  }
+`
+
+const ManageSubscriptionPage = () => {
+  const { currentUser, reauthenticate } = useAuth()
+  const [cancel, { data }] = useMutation(CANCEL_SUBSCRIPTION)
+  const cancelSubscription = async () => {
+    if (confirm('Do you really want to cancel your subscription?')) {
+      cancel({
+        variables: { id: currentUser.subscriptionId },
+      })
     }
   }
+  useEffect(() => {
+    if (data) {
+      if (data.cancelSubscription) {
+        reauthenticate()
+        navigate(routes.home())
+      } else {
+        toast.error('Enable to cancel this subscription at the moment')
+      }
+    }
+  }, [data])
+  return (...)
 }
 ```
 

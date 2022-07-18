@@ -128,7 +128,7 @@ We now need to make sure that the seller goes through stripe onboarding for thei
 
 After signup, is the user is a seller, we will call the backend and request an `account link`. That is a single use Stripe url for the user to complete the onboarding process before getting redirected to our platform.
 
-We'll do that inside a function
+We'll do that inside a function (another solution would be to add a sdl and service with a `createStripeAccountLink` mutation)
 
 ```
 yarn rw g function createStripeAccountLink

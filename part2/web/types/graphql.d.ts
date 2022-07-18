@@ -43,7 +43,9 @@ export type CreateUserInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  cancelSubscription: Scalars['Boolean'];
   createProduct: Product;
+  createSubscription: Scalars['String'];
   createUser: User;
   deleteProduct: Product;
   deleteUser: User;
@@ -52,8 +54,18 @@ export type Mutation = {
 };
 
 
+export type MutationcancelSubscriptionArgs = {
+  id: Scalars['String'];
+};
+
+
 export type MutationcreateProductArgs = {
   input: CreateProductInput;
+};
+
+
+export type MutationcreateSubscriptionArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -193,9 +205,23 @@ export type SubscriptionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type SubscriptionsQuery = { __typename?: 'Query', subscriptions: Array<{ __typename?: 'Subscription', id: string, name: string, price: number, currency: string, description?: string | null }> };
 
+export type CreateSubscriptionMutationVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type CreateSubscriptionMutation = { __typename?: 'Mutation', createSubscription: string };
+
 export type CreateProductMutationVariables = Exact<{
   input: CreateProductInput;
 }>;
 
 
 export type CreateProductMutation = { __typename?: 'Mutation', createProduct: { __typename?: 'Product', name: string, description?: string | null, price: number } };
+
+export type CancelSubscriptionMutationVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type CancelSubscriptionMutation = { __typename?: 'Mutation', cancelSubscription: boolean };
