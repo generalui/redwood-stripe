@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import { User as PrismaUser, Product as PrismaProduct, Purchase as PrismaPurchase } from '.prisma/client';
+import { User as PrismaUser, Product as PrismaProduct, Purchase as PrismaPurchase, Prisma } from '.prisma/client';
 import { RedwoodGraphQLContext } from '@redwoodjs/graphql-server/dist/functions/types';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -10,6 +10,7 @@ export type ResolverFn<TResult, TParent, TContext, TArgs> = (
       args?: TArgs,
       obj?: { root: TParent; context: TContext; info: GraphQLResolveInfo }
     ) => Promise<Partial<TResult>> | Partial<TResult>;
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -21,8 +22,8 @@ export type Scalars = {
   BigInt: number;
   Date: string;
   DateTime: string;
-  JSON: Record<string, unknown>;
-  JSONObject: Record<string, unknown>;
+  JSON: Prisma.JsonValue;
+  JSONObject: Prisma.JsonObject;
   Time: string;
   URL: any;
 };
@@ -58,8 +59,10 @@ export type CreateUserInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  cancelSubscription: Scalars['Boolean'];
   createProduct: Product;
   createPurchase: Purchase;
+  createSubscription: Scalars['String'];
   createUser: User;
   deleteProduct: Product;
   deletePurchase: Purchase;
@@ -70,6 +73,11 @@ export type Mutation = {
 };
 
 
+export type MutationcancelSubscriptionArgs = {
+  id: Scalars['String'];
+};
+
+
 export type MutationcreateProductArgs = {
   input: CreateProductInput;
 };
@@ -77,6 +85,11 @@ export type MutationcreateProductArgs = {
 
 export type MutationcreatePurchaseArgs = {
   input: CreatePurchaseInput;
+};
+
+
+export type MutationcreateSubscriptionArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -338,7 +351,7 @@ export type ResolversTypes = {
   Float: ResolverTypeWrapper<Scalars['Float']>;
   ID: ResolverTypeWrapper<Scalars['ID']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
-  JSON: ResolverTypeWrapper<Scalars['JSON']>;
+  JSON: ResolverTypeWrapper<Prisma>;
   JSONObject: ResolverTypeWrapper<Scalars['JSONObject']>;
   Mutation: ResolverTypeWrapper<{}>;
   Payment: ResolverTypeWrapper<Payment>;
@@ -346,7 +359,7 @@ export type ResolversTypes = {
   Product: ResolverTypeWrapper<PrismaProduct>;
   Purchase: ResolverTypeWrapper<PrismaPurchase>;
   Query: ResolverTypeWrapper<{}>;
-  Redwood: ResolverTypeWrapper<Redwood>;
+  Redwood: ResolverTypeWrapper<Omit<Redwood, 'currentUser'> & { currentUser?: Maybe<ResolversTypes['JSON']> }>;
   String: ResolverTypeWrapper<Scalars['String']>;
   Subscription: ResolverTypeWrapper<{}>;
   Time: ResolverTypeWrapper<Scalars['Time']>;
@@ -369,14 +382,14 @@ export type ResolversParentTypes = {
   Float: Scalars['Float'];
   ID: Scalars['ID'];
   Int: Scalars['Int'];
-  JSON: Scalars['JSON'];
+  JSON: Prisma;
   JSONObject: Scalars['JSONObject'];
   Mutation: {};
   Payment: Payment;
   Product: PrismaProduct;
   Purchase: PrismaPurchase;
   Query: {};
-  Redwood: Redwood;
+  Redwood: Omit<Redwood, 'currentUser'> & { currentUser?: Maybe<ResolversParentTypes['JSON']> };
   String: Scalars['String'];
   Subscription: {};
   Time: Scalars['Time'];
@@ -418,8 +431,10 @@ export interface JSONObjectScalarConfig extends GraphQLScalarTypeConfig<Resolver
 }
 
 export type MutationResolvers<ContextType = RedwoodGraphQLContext, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  cancelSubscription?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationcancelSubscriptionArgs, 'id'>>;
   createProduct?: Resolver<ResolversTypes['Product'], ParentType, ContextType, RequireFields<MutationcreateProductArgs, 'input'>>;
   createPurchase?: Resolver<ResolversTypes['Purchase'], ParentType, ContextType, RequireFields<MutationcreatePurchaseArgs, 'input'>>;
+  createSubscription?: Resolver<ResolversTypes['String'], ParentType, ContextType, RequireFields<MutationcreateSubscriptionArgs, 'id'>>;
   createUser?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationcreateUserArgs, 'input'>>;
   deleteProduct?: Resolver<ResolversTypes['Product'], ParentType, ContextType, RequireFields<MutationdeleteProductArgs, 'id'>>;
   deletePurchase?: Resolver<ResolversTypes['Purchase'], ParentType, ContextType, RequireFields<MutationdeletePurchaseArgs, 'id'>>;

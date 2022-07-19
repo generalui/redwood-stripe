@@ -1,7 +1,7 @@
 import type { Subscription } from 'types/graphql'
 import { CellSuccessProps, CellFailureProps, useMutation } from '@redwoodjs/web'
 import { useAuth } from '@redwoodjs/auth'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Subscribe from '../Subscribe/Subscribe'
 import { toast } from '@redwoodjs/web/toast'
 
@@ -37,24 +37,16 @@ export const Success = ({
   const { currentUser, reauthenticate } = useAuth()
   const [clientSecret, setClientSecret] = useState('')
   const [create, { data }] = useMutation(CREATE_SUBSCRIPTION)
-  const [loading, setIsLoading] = useState(false)
-  const createSubscription = async (subscription: Subscription) => {
-    setIsLoading(true)
-    const response = await fetch(`${global.RWJS_API_URL}/createSubscription`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId: currentUser.id,
-        subscriptionId: subscription.id,
-      }),
-    })
-    const { clientSecret } = await response.json()
-    await reauthenticate()
-    setClientSecret(clientSecret)
-    setIsLoading(false)
-  }
+  useEffect(() => {
+    if (data) {
+      if (data.createSubscription) {
+        reauthenticate()
+        setClientSecret(data.createSubscription)
+      } else {
+        toast.error('Could not create subscription')
+      }
+    }
+  }, [data])
   const isCurrentSubscription = (subscriptionName: string) =>
     currentUser?.subscriptionName === subscriptionName &&
     currentUser?.subscriptionStatus === 'success'
@@ -66,7 +58,11 @@ export const Success = ({
           return (
             <li key={item.id}>
               <button
-                onClick={() => createSubscription(item)}
+                onClick={() =>
+                  create({
+                    variables: { id: item.id },
+                  })
+                }
                 disabled={isCurrentSubscription(item.name)}
                 className={`py-2 px-4 ${
                   isCurrentSubscription(item.name)
@@ -80,11 +76,6 @@ export const Success = ({
           )
         })}
       </ul>
-      {loading && (
-        <div className="text-slate-400 italic text-center mt-5">
-          Creating payment intent...
-        </div>
-      )}
       {clientSecret && (
         <Subscribe
           clientSecret={clientSecret}

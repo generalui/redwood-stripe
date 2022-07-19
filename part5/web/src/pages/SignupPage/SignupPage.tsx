@@ -1,5 +1,7 @@
-import { Link, navigate, routes } from '@redwoodjs/router'
 import { useRef } from 'react'
+import { useEffect } from 'react'
+
+import { useAuth } from '@redwoodjs/auth'
 import {
   Form,
   Label,
@@ -9,10 +11,10 @@ import {
   Submit,
   CheckboxField,
 } from '@redwoodjs/forms'
-import { useAuth } from '@redwoodjs/auth'
+import { Link, navigate, routes } from '@redwoodjs/router'
 import { MetaTags } from '@redwoodjs/web'
-import { toast, Toaster } from '@redwoodjs/web/toast'
-import { useEffect } from 'react'
+import { toast } from '@redwoodjs/web/toast'
+
 import { stripeOnboarding } from 'src/lib/stripeOnboarding'
 
 const SignupPage = () => {
@@ -55,7 +57,6 @@ const SignupPage = () => {
       <MetaTags title="Signup" />
 
       <main className="rw-main">
-        <Toaster toastOptions={{ className: 'rw-toast', duration: 6000 }} />
         <div className="rw-scaffold rw-login-container">
           <div className="rw-segment">
             <header className="rw-segment-header">
