@@ -208,11 +208,7 @@ We now want our marketplace to have the choice between 2 subscriptions:
 - The Basic subscription. It won't cost much every month but then we'll take so much commission off the sales that this will probably not be sustainable so your sellers will want to upgrade to..
 - The Pro subscription. A tad more pricey but then we just take 3% commission on each sale! A steal
 
-As we've already seen, Redwood has a great [CLI tool](https://redwoodjs.com/docs/cli-commands). Among the available command is `exec` that allows you to run a script that you put inside the `scripts` folder. So, although we could go on the Stripe UI and create products manually, what's the fun of that? So let's go ahead and add a `seed-stripe-subscriptions.ts` inside the scripts folder and make it return a default async function:
-
-```ts
-export default async () => {}
-```
+As we've already seen, Redwood has a great [CLI tool](https://redwoodjs.com/docs/cli-commands). Among the available command is `exec` that allows you to run a script that you put inside the `scripts` folder. So, although we could go on the Stripe UI and create products manually, what's the fun of that? So let's go ahead and add a `seed-stripe-subscriptions.ts` inside the scripts folder
 
 We'll start using the stripe API. We'll use the 2 following commands:
 
@@ -249,22 +245,27 @@ const subscriptions: Stripe.ProductCreateParams[] = [
 ]
 ```
 
-We can then retrieve the products and check that they don't already exist on your Stripe account inside the function we just created:
+We can then retrieve the products and check that they don't already exist on your Stripe account inside the default function of the script we just created:
 
 ```ts
-console.log('Getting products')
-const { data: products } = await stripe.products.list({
-  active: true,
-})
+import Stripe from 'stripe'
+import { stripe } from 'api/src/lib/stripe'
 
-if (products.length) {
-  const productNames = products.map((p) => p.name)
-  for (const subscription of subscriptions) {
-    if (productNames.includes(subscription.name)) {
-      console.log(
-        `The subscription ${subscription.name} exists already, delete it from your Stripe dashboard to run this script`
-      )
-      process.exit(1)
+export default async () => {
+  console.log('Getting products')
+  const { data: products } = await stripe.products.list({
+    active: true,
+  })
+
+  if (products.length) {
+    const productNames = products.map((p) => p.name)
+    for (const subscription of subscriptions) {
+      if (productNames.includes(subscription.name)) {
+        console.log(
+          `The subscription ${subscription.name} exists already, delete it from your Stripe dashboard to run this script`
+        )
+        process.exit(1)
+      }
     }
   }
 }
