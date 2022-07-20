@@ -60,6 +60,11 @@ Create front-end authentication
 Update you prisma schema to include a user model that support the authentication we just installed. Remove the `UserExample` model from `prisma.schema` and add:
 
 ```prisma
+datasource db {
+  provider = "postgres"
+  url      = env("DATABASE_URL")
+}
+
 enum SubscriptionStatus {
   init
   success
