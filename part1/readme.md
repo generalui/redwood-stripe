@@ -1,4 +1,4 @@
-# Prerequistes
+# Prerequisites
 
 ## nvm and node
 

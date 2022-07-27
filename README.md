@@ -38,3 +38,5 @@ Ok, now that we know we're going to buy an Island in the Pacific very soon, we n
 - (admin) Payment list
 - (admin) Sellers list and Sales
 - 🏝️
+
+[LIVE DEMO](https://stanislas-duprey-redwood-stripe-master-7.free.layer0-perma.link)
