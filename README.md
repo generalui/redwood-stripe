@@ -8,6 +8,8 @@ The goal of this tutorial is to create a boilerplate application that is using t
 
 Note: We'll be using Typescript for this tutorial, it doesn't mean that you have to use it. You could strip out the typescript parts and use the `yarn create redwood-app` without the `--ts` option, I won't judge you. Other people might...
 
+My setup is a mess, how do I restart? You can follow the instructions [here](https://github.com/generalui/redwood-stripe/issues/16)
+
 Ok, now that we know we're going to buy an Island in the Pacific very soon, we need to divide and conquer and figure out what are the different steps going to be:
 
 [Part 1:](part1)

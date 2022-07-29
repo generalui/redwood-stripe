@@ -124,7 +124,7 @@ Typically a market place has 2 different kind of users. Regular users (buyers / 
 
 Update `SignupPage.tsx` with the following, right after `<FieldError name="password" className="rw-field-error" />`:
 
-```html
+```tsx
 <label name="seller" className="rw-label"> Seller </label>
 <CheckboxField name="seller" className="rw-input" />
 ```
@@ -213,7 +213,7 @@ We now want our marketplace to have the choice between 2 subscriptions:
 - The Basic subscription. It won't cost much every month but then we'll take so much commission off the sales that this will probably not be sustainable so your sellers will want to upgrade to..
 - The Pro subscription. A tad more pricey but then we just take 3% commission on each sale! A steal
 
-As we've already seen, Redwood has a great [CLI tool](https://redwoodjs.com/docs/cli-commands). Among the available command is `exec` that allows you to run a script that you put inside the `scripts` folder. So, although we could go on the Stripe UI and create products manually, what's the fun of that? So let's go ahead and add a `seed-stripe-subscriptions.ts` inside the scripts folder
+As we've already seen, Redwood has a great [CLI tool](https://redwoodjs.com/docs/cli-commands). Among the available command is `exec` that allows you to run a script that you put inside the `scripts` folder. So, although we could go on the Stripe Dashboard and create products manually, what's the fun of that? So let's go ahead and add a `seed-stripe-subscriptions.ts` inside the scripts folder
 
 We'll start using the stripe API. We'll use the 2 following commands:
 
@@ -323,7 +323,7 @@ export const schema = gql`
 `
 ```
 
-Your IDE should see that the subscription query implementation is missing (at least VS Code does for me...), you can let your IDE create the skelton implementation for this query for you, or create a file `api/src/services/subscriptions/subscriptions.ts` and add the content that retrieve the list of subscription, this is very similar to our seeder earlier
+Your IDE should see that the subscription query implementation is missing (at least VS Code does for me...), you can let your IDE create the skeleton implementation for this query for you, or create a file `api/src/services/subscriptions/subscriptions.ts` and add the content that retrieve the list of subscription, this is very similar to our seeder earlier
 
 ```ts
 import Stripe from 'stripe'
@@ -478,7 +478,6 @@ export const QUERY = gql`
       id
       name
       price
-      priceId
       currency
       description
     }
