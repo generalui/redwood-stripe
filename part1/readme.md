@@ -492,9 +492,7 @@ export const QUERY = gql`
 export const Success = ({
   subscriptions,
 }: CellSuccessProps<{ subscriptions: Subscription[] }>) => {
-  const { currentUser, reauthenticate } = useAuth()
-  const [clientSecret, setClientSecret] = useState('')
-  const [create, { data }] = useMutation(CREATE_SUBSCRIPTION)
+  const { currentUser } = useAuth()
   return (
     <div className="w-80 mx-auto">
       <p className="text-slate-500 text-center">Pick a subscription</p>
@@ -519,14 +517,6 @@ export const Success = ({
           )
         })}
       </ul>
-      {clientSecret && (
-        <Subscribe
-          clientSecret={clientSecret}
-          onClose={() => {
-            setClientSecret('')
-          }}
-        />
-      )}
     </div>
   )
 }
