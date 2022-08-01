@@ -223,6 +223,9 @@ We'll start using the stripe API. We'll use the 2 following commands:
 We first define our subscriptions as a list of Stripe.ProductCreateParams
 
 ```ts
+import Stripe from 'stripe'
+import { stripe } from 'api/src/lib/stripe'
+
 const subscriptions: Stripe.ProductCreateParams[] = [
   {
     name: 'Basic',
@@ -253,9 +256,6 @@ const subscriptions: Stripe.ProductCreateParams[] = [
 We can then retrieve the products and check that they don't already exist on your Stripe account inside the default function of the script we just created:
 
 ```ts
-import Stripe from 'stripe'
-import { stripe } from 'api/src/lib/stripe'
-
 export default async () => {
   console.log('Getting products')
   const { data: products } = await stripe.products.list({
@@ -448,12 +448,12 @@ We finally get the result that we want:
 
 ## Create a page to choose a subscription
 
-Let's start by creating the page. But this page will first need to load the subscriptions to let the user choose among them. Redwood has a special type of component for that called a [Cell](https://redwoodjs.com/docs/cells#generating-a-cell). A cell is a special module with a defined set of exported variables and function that get pass to Redwood's internal `createCell` function that spits out an actual React component.
+Let's start by creating the page. But this page will first need to load the subscriptions to let the user choose among them. Redwood has a special type of component for that called a [Cell](https://redwoodjs.com/docs/cells#generating-a-cell) - A cell is a special module with a defined set of exported variables and function that get pass to Redwood's internal `createCell` function that spits out an actual React component.
 `yarn rw generate cell Subscriptions`
 
 We'll also need a page to host this cell
-`yarn rw generate page PickSubscription`
-And in `PickSubscription.ts` call the cell
+`yarn rw generate page PickSubscription`,
+and in `PickSubscription.ts` call the cell
 
 ```ts
 import SubscriptionsCell from 'src/components/SubscriptionsCell'
